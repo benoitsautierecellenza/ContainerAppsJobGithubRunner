@@ -1,6 +1,4 @@
 // inputs : https://github.com/mddazure/azure_verified_module_lab/blob/main/main.bicep
-@description('Resource Group name to deploy the complete solution')
-param param_rg_name string = 'demo'
 
 // input projet avec les infos de VNET / Subnet et   infrastructureSubnetId:  pour ACA
 
@@ -16,59 +14,50 @@ param param_project_name string = 'acarunner'
 @description('Project version')
 param param_project_version string = '1.0'
 
-@description('Virtual Network name to be used by the solution')
-param param_vnet_name string = 'demovnet'
+@description('VNET address prefix')
+param param_solution_vnet_addressprefix string = '10.0.0.0/16'
 
-@description('Log Analytics workspace to be used by the solution.')
-param param_law_name string = 'demolaw'
-
-@description('Key Vault name to be used by the solution')
-param param_kv_name string = 'demols9678678'
+@description('Subnet CIRD to be dedicated for Azure Container Apps environment')
+param param_solution_subnet_prefix string = '10.0.0.0/23'
 
 @description('The GitHub Access Token with permission to fetch registration-token')
 @secure()
 param param_GitHubAccessToken string = 'test'
 
-@description('Azure Container registry name')
-param param_acr_name string = 'demoacr978945'
-
-@description('Azure User-Assiged Managed identity to be use dby the solution')
-param param_userAssignedIdentity_name string = 'identity'
-
-@description('Azure Container Apps environment to be created')
-param param_managedEnvironment_name string = 'aca'
-
-@description('Managed resource group name for ACA')
-param param_managedEnvironment_param_rg_name string = 'RG_ACA'
+param param_guid string = newGuid()
 
 //
 // Variable section
 //
 var varSecretNameGitHubAccessToken = 'github-accesstoken'
 var var_Solution_vnet_name = '${param_environment_name}-vnet'
-var var_Solution_aca_environment_name = '${param_environment_name}-aca-env'
-var var_param_law_name = '${param_environment_name}-law'
-var var_userAssignedIdentity_name = '${param_environment_name}-${param_project_name}-law'
-// possible randomizer le container registry name?
-
+var var_Solution_aca_environment_name = '${param_environment_name}--${param_project_name}-acaenv'
+var var_param_law_name = '${param_environment_name}-${param_project_name}-law'
+var var_userAssignedIdentity_name = '${param_environment_name}-${param_project_name}-uai'
+var var_guid_pattern = replace(substring(param_guid, 0, 12), '-', '')
+var var_kv_name = 'kv${var_guid_pattern}'
+var var_acr_name = 'acr${param_environment_name}${var_guid_pattern}'
+var var_solution_rg_name = 'RG-${param_environment_name}-${param_project_version}'
+var var_managedEnvironment_param_rg_name = 'RG-${param_environment_name}-${param_project_name}-acaenv'
+var var_aca_dedicated_subnet_name = 'aca'
 var var_project_tags = {
   Project: param_project_name
   Environment: param_environment_name
   version: param_project_version
 }
-
+// Resource group for all resources related to the solution
 targetScope = 'subscription'
 resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
-  name: param_rg_name
+  name: var_solution_rg_name
   location: param_location
   tags: var_project_tags
 }
-// Provisioned Key Vault with secret
+// Key Vault to be used by the solution to store secrets
 module KeyVault 'br/public:avm/res/key-vault/vault:0.10.2' = {
   scope: rg
   name: '${uniqueString(deployment().name, param_location)}-kv'
   params: {
-    name: param_kv_name
+    name: var_kv_name
     tags: var_project_tags
     sku: 'standard'
     enablePurgeProtection: false
@@ -89,32 +78,34 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.10.2' = {
     ]
   }
 }
-// Virtual Network to be used by Container Apps
+// Virtual Network to be used by Container Apps environment
 module virtualNetwork 'br/public:avm/res/network/virtual-network:0.5.1' = {
   name: '${uniqueString(deployment().name, param_location)}-vnet'
   scope: rg
   params: {
     name: var_Solution_vnet_name
-    //name: param_vnet_name
-    addressPrefixes: ['10.0.0.0/16']
+    //addressPrefixes: ['10.0.0.0/16']
+    addressPrefixes: [
+      param_solution_vnet_addressprefix
+    ]
     location: param_location
     tags: var_project_tags
     subnets: [
       {
-        addressPrefix: '10.0.0.0/23'
-        name: 'aca'
+        //        addressPrefix: '10.0.0.0/23'
+        addressPrefix: param_solution_subnet_prefix
+        name: var_aca_dedicated_subnet_name
         delegation: 'Microsoft.App/environments'
       }
     ]
   }
 }
-// Log Analytics workspace required for Container Apps
+// Log Analytics workspace to be used in the solution
 module workspace 'br/public:avm/res/operational-insights/workspace:0.7.1' = {
   name: '${uniqueString(deployment().name, param_location)}-law'
   scope: rg
   params: {
     name: var_param_law_name
-    //  name: param_law_name
     location: param_location
     tags: var_project_tags
   }
@@ -124,13 +115,13 @@ module userAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-id
   name: '${uniqueString(deployment().name, param_location)}-aca-uami'
   scope: rg
   params: {
-    //name: param_userAssignedIdentity_name
     name: var_userAssignedIdentity_name
     location: param_location
     tags: var_project_tags
   }
 }
 // Azure container registry with ACR pull role asignment
+// Note, pas de privatisation car problème oeuf et de la poule
 module registry 'br/public:avm/res/container-registry/registry:0.6.0' = {
   name: '${uniqueString(deployment().name, param_location)}-acr'
   scope: rg
@@ -138,7 +129,8 @@ module registry 'br/public:avm/res/container-registry/registry:0.6.0' = {
     userAssignedIdentity
   ]
   params: {
-    name: param_acr_name
+    // name: param_acr_name
+    name: var_acr_name
     acrSku: 'Basic'
     location: param_location
     tags: var_project_tags
@@ -157,11 +149,16 @@ module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.8.1' = {
   params: {
     name: var_Solution_aca_environment_name
     logAnalyticsWorkspaceResourceId: workspace.outputs.resourceId
-    infrastructureResourceGroupName: param_managedEnvironment_param_rg_name
-    infrastructureSubnetId: '${virtualNetwork.outputs.resourceId}/subnets/aca'
+    infrastructureResourceGroupName: var_managedEnvironment_param_rg_name
+    infrastructureSubnetId: '${virtualNetwork.outputs.resourceId}/subnets/${var_aca_dedicated_subnet_name}'
     tags: var_project_tags
     internal: true
     zoneRedundant: false
+    managedIdentities: {
+      userAssignedResourceIds: [
+        userAssignedIdentity.outputs.resourceId
+      ]
+    }
     workloadProfiles: [
       {
         name: 'Consumption'
@@ -173,3 +170,5 @@ module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.8.1' = {
 // maintenant, il faut créer l'image Docker
 // prochaine étape, la condtruction du job
 // etape finale : créer le workflow
+output output_ky_name string = var_kv_name
+output output_acr_name string = var_acr_name
