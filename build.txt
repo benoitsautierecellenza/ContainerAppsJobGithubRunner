@@ -1,0 +1,14 @@
+
+# Get latest version available
+GITHUBACTION_RUNNER_LATEST_TAG=$(git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/actions/runner/ '*.*.*' | tail --lines=1 | cut --delimiter='/' --fields=3)
+
+OK mais voir comment supprimer le V devant pour avoir une version clean
+
+#
+v2.320.0=> attention a bien supprimer le 'v'
+az acr build --registry acrnprd1d0d59b5aa8 --image acrnprd1d0d59b5aa8.azurecr.io/runner_base:2.320.0 . --build-arg 'RUNNER_VERSION=2.320.0'  
+# OK
+# Build the specialized one
+# Imager version
+# acrnprd1d0d59b5aa8.azurecr.io/runner_base:2.320.0
+az acr build  --registry acrnprd1d0d59b5aa8 --f DockerFile --image acrnprd1d0d59b5aa8.azurecr.io/ghrunner:1.0 . --build-arg 'BASE_IMAGE_VERSION=acrnprd1d0d59b5aa8.azurecr.io/runner_base:2.320.0' --build-arg 'DOTNET_VERSION=7.0' --build-arg 'GITVERSION_VERSION=5.6.6' --build-arg 'PS_VERSION=7.4.5' --build-arg 'AZACCOUNTS_VERSION=2.12.1' --build-arg 'AZKEYVAULT_VERSION=4.9.1' --build-arg 'AZSTORAGE_VERSION=5.0.0' --build-arg 'AZAPPINSIGHT_VERSION=2.2.1' --build-arg 'AZNETWORK_VERSION=5.6.0' --build-arg 'AZRESOURCES_VERSION=6.5.1' --build-arg 'AZ_TABLE_VERSION=2.1.0' --build-arg 'MS_GRAPH_VERSION=2.11.1' --build-arg 'TERRAFORM_VERSION=1.5.7' --build-arg 'TERRAGRUNT_VERSION=0.51.2' 

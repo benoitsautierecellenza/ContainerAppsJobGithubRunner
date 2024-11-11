@@ -30,15 +30,15 @@ param param_guid string = newGuid()
 // Variable section
 //
 var varSecretNameGitHubAccessToken = 'github-accesstoken'
-var var_Solution_vnet_name = '${param_environment_name}-vnet'
+var var_Solution_vnet_name = '${param_environment_name}-${param_project_name}-vnet'
 var var_Solution_aca_environment_name = '${param_environment_name}--${param_project_name}-acaenv'
 var var_param_law_name = '${param_environment_name}-${param_project_name}-law'
 var var_userAssignedIdentity_name = '${param_environment_name}-${param_project_name}-uai'
 var var_guid_pattern = replace(substring(param_guid, 0, 12), '-', '')
 var var_kv_name = 'kv${var_guid_pattern}'
 var var_acr_name = 'acr${param_environment_name}${var_guid_pattern}'
-var var_solution_rg_name = 'RG-${param_environment_name}-${param_project_version}'
-var var_managedEnvironment_param_rg_name = 'RG-${param_environment_name}-${param_project_name}-acaenv'
+var var_solution_rg_name = 'RG-${param_environment_name}-${param_project_name}-${param_project_version}'
+var var_managedEnvironment_param_rg_name = 'RG-${param_environment_name}-${param_project_name}-${param_project_version}-acaenv'
 var var_aca_dedicated_subnet_name = 'aca'
 var var_project_tags = {
   Project: param_project_name
@@ -167,8 +167,8 @@ module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.8.1' = {
     ]
   }
 }
+output output_ky_name string = var_kv_name
+output output_acr_name string = var_acr_name
 // maintenant, il faut créer l'image Docker
 // prochaine étape, la condtruction du job
 // etape finale : créer le workflow
-output output_ky_name string = var_kv_name
-output output_acr_name string = var_acr_name

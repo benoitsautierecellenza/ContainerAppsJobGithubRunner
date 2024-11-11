@@ -1,0 +1,94 @@
+﻿ARG BASE_IMAGE_VERSION
+FROM ${BASE_IMAGE_VERSION} as installer
+RUN sudo apt-get update #&& apt-get -y install
+RUN sudo apt-get -y install
+RUN sudo apt upgrade -y
+RUN sudo apt-get -y install ca-certificates 
+RUN sudo apt-get -y install curl
+RUN sudo apt-get -y install apt-transport-https
+RUN sudo apt-get -y install lsb-release
+RUN sudo apt-get -y install git
+RUN sudo apt-get -y install jq
+RUN sudo apt-get -y install gettext
+RUN sudo apt-get -y install gpg
+RUN sudo apt-get -y install gnupg 
+RUN sudo apt-get -y install wget
+RUN sudo apt-get -y install software-properties-common
+RUN sudo apt-get -y install unzip
+RUN sudo apt-get -y install python3 
+RUN sudo apt-get -y install zip
+RUN sudo apt-get -y install pip
+RUN sudo apt-get update #&& apt-get -y install
+ARG DOTNET_VERSION
+ARG GITVERSION_VERSION
+ARG PS_VERSION
+RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel ${DOTNET_VERSION}
+ENV PATH="/root/.dotnet:/root/.dotnet/tools:${PATH}"
+ENV DOTNET_ROOT="/root/.dotnet" 
+
+# Azure CLI new installation
+RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg >/dev/null
+RUN echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+RUN sudo apt-get update
+RUN sudo apt-get install azure-cli
+
+# JFROG (latest)
+RUN curl -fL https://getcli.jfrog.io | sh
+RUN sudo mv jfrog /usr/bin/jfrog
+RUN chmod +x /usr/bin/jfrog
+
+# Install Powershell
+ARG PS_VERSION
+RUN wget https://github.com/PowerShell/PowerShell/releases/download/v${PS_VERSION}/powershell_${PS_VERSION}-1.deb_amd64.deb
+RUN sudo dpkg -i powershell_${PS_VERSION}-1.deb_amd64.deb
+RUN sudo apt-get install -f
+RUN rm powershell_${PS_VERSION}-1.deb_amd64.deb
+RUN sudo apt-get install -y powershell
+
+# Install PowerShell modules
+ARG AZACCOUNTS_VERSION
+ARG AZKEYVAULT_VERSION
+ARG AZSTORAGE_VERSION
+ARG AZAPPINSIGHT_VERSION
+ARG AZNETWORK_VERSION
+ARG AZRESOURCES_VERSION
+ARG AZ_TABLE_VERSION
+ARG MS_GRAPH_VERSION
+RUN sudo pwsh -c "Install-Module -Name Az.Accounts -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZACCOUNTS_VERSION}"
+RUN sudo pwsh -c "Install-Module -Name Az.KeyVault -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZKEYVAULT_VERSION}"
+RUN sudo pwsh -c "Install-Module -Name Az.Storage -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZSTORAGE_VERSION}"
+RUN sudo pwsh -c "Install-Module -Name Az.ApplicationInsights -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZAPPINSIGHT_VERSION}"
+RUN sudo pwsh -c "Install-Module -Name Az.Network -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZNETWORK_VERSION}"
+RUN sudo pwsh -c "Install-Module -Name Az.Resources -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZRESOURCES_VERSION}"
+RUN sudo pwsh -c "Install-Module -Name AzTable -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZ_TABLE_VERSION}"
+RUN sudo pwsh -c "Install-Module -Name Microsoft.Graph -AllowClobber -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
+RUN sudo pwsh -c "Install-Module -name Microsoft.Graph.Authentication -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
+RUN sudo pwsh -c "Install-Module -name Microsoft.Graph.Applications -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
+
+# Install Terraform binary
+ARG TERRAFORM_VERSION
+RUN wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+RUN unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip && rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+RUN sudo mv terraform /usr/bin/terraform
+
+# Install Terragrunt binary
+ARG TERRAGRUNT_VERSION
+ADD https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64 /usr/local/bin/terragrunt
+RUN sudo chmod +x /usr/local/bin/terragrunt
+
+# Install kubectl binary
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+RUN chmod +x ./kubectl
+RUN sudo mv ./kubectl /usr/local/bin
+
+# HELM
+RUN curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+RUN sudo apt-get update
+RUN sudo apt-get install helm
+
+# Add Kubelogin (latest) OK
+RUN sudo az aks install-cli
+
+# Azure Communication Services OK
+RUN sudo az extension add --name communication --system
