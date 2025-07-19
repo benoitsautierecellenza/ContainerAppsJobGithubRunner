@@ -1,0 +1,24 @@
+name: DemoHosted
+on:
+  workflow_dispatch:
+    inputs:
+      Environment:
+        description: 'Environment Name PRD/DEV'
+        required: true
+        default: 'DEV'
+
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+    steps:      
+    - name: show informations2
+      shell: bash  
+      run: |
+            az --version
+            terraform --version
+            pwsh
+            $psversiontable
+            az group list --query [].id
