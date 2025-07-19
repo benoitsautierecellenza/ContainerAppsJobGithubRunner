@@ -10,7 +10,7 @@ param PARAM_PROJECT_VERSION string = '1.0'
 param PARAM_LOCATION string = 'westeurope'
 
 @description('Project version')
-param ENVIRONMENT_NAME string = 'prod'
+param ENVIRONMENT_NAME string = 'nprd'
 
 @description('Azure Container Registry name')
 param ACR_NAME string = 'acrnprdab2cae523be'
@@ -19,7 +19,7 @@ param ACR_NAME string = 'acrnprdab2cae523be'
 param KEYVAULT_NAME string = 'kvab2cae523be'
 
 @description('GITHUB Image version')
-param RUNNER_IMAGE_VERSION string = '2.325.0'
+param RUNNER_IMAGE_VERSION string = '2.325.0' // Remplacer par '2.325.0' quand on veut utiliser la dernière version
 
 @description('GitHub repository owner')
 param GITHUB_REPO_OWNER string = 'benoitsautierecellenza'
@@ -33,8 +33,8 @@ param GITHUB_APP_ID string = '1626486'
 @description('GitHub App Installation ID')
 param GITHUB_APP_INSTALLATION_ID int = 76457847
 
-var CONTAINER_APP_ENV_NAME = '${ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-acaenv' //        
-var VAR_USERASSIGNEDIDENTITY_NAME = '${ENVIRONMENT_NAME}-${PARAM_PROJECT_VERSION}-uai' 
+var CONTAINER_APP_ENV_NAME = '${ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-acaenv' //     fix name for the Container Apps environment   
+var VAR_USERASSIGNEDIDENTITY_NAME = '${ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-uai' 
 var ACR_LOGINSERVER = '${ACR_NAME}.azurecr.io' 
 var GITHUB_RUNNER_JOB_NAME = 'githubactionrunner'
 var GITHUB_RUNNER_IMAGE_NAME = 'runner_base'
@@ -81,8 +81,8 @@ module acj 'br/public:avm/res/app/job:0.6.0' = {
         name: GITHUB_RUNNER_JOB_NAME
         image: GITHUB_RUNNER_IMAGE_PATH
         resources: {
-          cpu: '0.5'
-          memory: '1.5Gi'
+          cpu: '1.0'
+          memory: '2.0Gi'
         }
         env: [
           { name: 'PEM', secretRef: 'pem' }
@@ -98,13 +98,13 @@ module acj 'br/public:avm/res/app/job:0.6.0' = {
         name: 'pem'
         //        keyVaultUrl: KEY_VAULT_PEMFILE_SECRET_URI // kv.outputs.uri when aca uses systemassigned-managedid -> The expression is involved in a cycle ("aca" -> "kv").
         keyVaultUrl: kv_secret.properties.secretUri
-        identity: userAssignedIdentity.id // Use the id directly from the identity
+        identity: userAssignedIdentity.id // Use the resource ID for the identity
       }
     ]
     registries: [
       {
         server: acr.properties.loginServer
-        identity: userAssignedIdentity.id // Use the id directly from the identity
+        identity: userAssignedIdentity.id // Use the resource ID for the identity
       }
     ]
     triggerType: 'Event'
@@ -133,7 +133,7 @@ module acj 'br/public:avm/res/app/job:0.6.0' = {
       }
     }
     managedIdentities: {
-      userAssignedResourceIds: [userAssignedIdentity.id] // Use the resourceId directly from the identity
+      userAssignedResourceIds: [userAssignedIdentity.id] // Use the resource ID for the managed identity
     }
   }
 }

@@ -1,25 +1,25 @@
-// inputs : https://github.com/mddazure/azure_verified_module_lab/blob/main/main.bicep
-
 // Positionner tous les paramètres dans un JSON
-// Manque la mise en cache pour les images du runner
+// solutionner problème du GUID à générer de manière unique
+// solutionner permission Key Vault avec GUID
+// solutionner problème des rôle assignments already exists
 
 @description('Azure region in witch solution will be deployed')
-param param_location string = 'westeurope'
+param PARAM_LOCATION string = 'westeurope'
 
 @description('name of the environment to be used as prefix for azure resources')
-param param_environment_name string = 'nprd'
+param PARAM_ENVIRONMENT_NAME string = 'nprd'
 
 @description('Project name ')
-param param_project_name string = 'acarunner'
+param PARAM_PROJECT_NAME string = 'acarunner'
 
 @description('Project version')
-param param_project_version string = '1.0'
+param PARAM_PROJECT_VERSION string = '1.0'
 
 @description('VNET address prefix')
-param param_solution_vnet_addressprefix string = '10.0.0.0/16'
+param PARAM_SOLUTION_VNET_ADDRESSPREFIX string = '10.0.0.0/16'
 
 @description('Subnet CIRD to be dedicated for Azure Container Apps environment')
-param param_solution_subnet_prefix string = '10.0.0.0/23'
+param PARAM_SOLUTION_SUBNET_PREFIX string = '10.0.0.0/23'
 
 // En fait, j'ai un GUID à chaque exécution
 //param param_guid string = newGuid()
@@ -28,35 +28,35 @@ param param_guid string = 'ab2cae52-3be6-4eca-87bf-3f71eb825aef'
 //
 // Variable section
 //
-var var_Solution_vnet_name = '${param_environment_name}-${param_project_name}-vnet'
-var var_Solution_aca_environment_name = '${param_environment_name}-${param_project_name}-acaenv'
-var var_param_law_name = '${param_environment_name}-${param_project_name}-law'
-var var_userAssignedIdentity_name = '${param_environment_name}-${param_project_name}-uai'
+var VAR_SOLUTION_VNET_NAME = '${PARAM_ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-vnet'
+var VAR_SOLUTION_ACA_ENVIRONMENT_NAME = '${PARAM_ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-acaenv' // fix name for the Container Apps environment
+var VAR_LAW_NAME = '${PARAM_ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-law'
+var VAR_USERASSIGNEDIDENTITY_NAME = '${PARAM_ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-uai'
 var var_guid_pattern = replace(substring(param_guid, 0, 12), '-', '')
-var var_kv_name = 'kv${var_guid_pattern}'
-var var_acr_name = 'acr${param_environment_name}${var_guid_pattern}'
-var var_solution_rg_name = 'RG-${param_environment_name}-${param_project_name}-${param_project_version}'
-var var_managedEnvironment_param_rg_name = 'RG-${param_environment_name}-${param_project_name}-${param_project_version}-acaenv'
-var var_aca_dedicated_subnet_name = 'aca'
-var var_project_tags = {
-  Project: param_project_name
-  Environment: param_environment_name
-  version: param_project_version
+var VAR_KEYVAULT_NAME = 'kv${var_guid_pattern}'
+var VAR_ACR_NAME = 'acr${PARAM_ENVIRONMENT_NAME}${var_guid_pattern}'
+var VAR_SOLUTION_RG_NAME = 'RG-${PARAM_ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-${PARAM_PROJECT_VERSION}'
+var VAR_ACA_MANAGEDRG_NAME = 'RG-${PARAM_ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-${PARAM_PROJECT_VERSION}-acaenv'
+var VAR_ACA_SUBNET_NAME = 'aca'
+var VAR_SOLUTION_TAGS = {
+  Project: PARAM_PROJECT_NAME
+  Environment: PARAM_ENVIRONMENT_NAME
+  version: PARAM_PROJECT_VERSION
 }
 // Resource group for all resources related to the solution
 targetScope = 'subscription'
 resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
-  name: var_solution_rg_name
-  location: param_location
-  tags: var_project_tags
+  name: VAR_SOLUTION_RG_NAME
+  location: PARAM_LOCATION
+  tags: VAR_SOLUTION_TAGS
 }
 // Key Vault to be used by the solution to store secrets
 module KeyVault 'br/public:avm/res/key-vault/vault:0.10.2' = {
   scope: rg
-  name: '${uniqueString(deployment().name, param_location)}-kv'
+  name: '${uniqueString(deployment().name, PARAM_LOCATION)}-kv'
   params: {
-    name: var_kv_name
-    tags: var_project_tags
+    name: VAR_KEYVAULT_NAME
+    tags: VAR_SOLUTION_TAGS
     sku: 'standard'
     enablePurgeProtection: false
     enableSoftDelete: true
@@ -81,19 +81,19 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.10.2' = {
 }
 // Virtual Network to be used by Container Apps environment
 module virtualNetwork 'br/public:avm/res/network/virtual-network:0.5.1' = {
-  name: '${uniqueString(deployment().name, param_location)}-vnet'
+  name: '${uniqueString(deployment().name, PARAM_LOCATION)}-vnet'
   scope: rg
   params: {
-    name: var_Solution_vnet_name
+    name: VAR_SOLUTION_VNET_NAME
     addressPrefixes: [
-      param_solution_vnet_addressprefix
+      PARAM_SOLUTION_VNET_ADDRESSPREFIX
     ]
-    location: param_location
-    tags: var_project_tags
+    location: PARAM_LOCATION
+    tags: VAR_SOLUTION_TAGS
     subnets: [
       {
-        addressPrefix: param_solution_subnet_prefix
-        name: var_aca_dedicated_subnet_name
+        addressPrefix: PARAM_SOLUTION_SUBNET_PREFIX
+        name: VAR_ACA_SUBNET_NAME
         delegation: 'Microsoft.App/environments'
       }
     ]
@@ -101,36 +101,36 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.5.1' = {
 }
 // Log Analytics workspace to be used in the solution
 module workspace 'br/public:avm/res/operational-insights/workspace:0.7.1' = {
-  name: '${uniqueString(deployment().name, param_location)}-law'
+  name: '${uniqueString(deployment().name, PARAM_LOCATION)}-law'
   scope: rg
   params: {
-    name: var_param_law_name
-    location: param_location
-    tags: var_project_tags
+    name: VAR_LAW_NAME
+    location: PARAM_LOCATION
+    tags: VAR_SOLUTION_TAGS
+    dailyQuotaGb:5
+    dataRetention: 30
+    skuName: 'PerGB2018'   
   }
 }
 // User assigned identity to be used to pull image & cess secrets in Key Vault
 module userAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.0' = {
-  name: '${uniqueString(deployment().name, param_location)}-aca-uami'
+  name: '${uniqueString(deployment().name, PARAM_LOCATION)}-aca-uami'
   scope: rg
   params: {
-    name: var_userAssignedIdentity_name
-    location: param_location
-    tags: var_project_tags
+    name: VAR_USERASSIGNEDIDENTITY_NAME
+    location: PARAM_LOCATION
+    tags: VAR_SOLUTION_TAGS
   }
 }
 // Azure container registry with ACR pull role asignment
 module registry 'br/public:avm/res/container-registry/registry:0.6.0' = {
-  name: '${uniqueString(deployment().name, param_location)}-acr'
+  name: '${uniqueString(deployment().name, PARAM_LOCATION)}-acr'
   scope: rg
-  dependsOn: [
-    userAssignedIdentity
-  ]
   params: {
-    name: var_acr_name
+    name: VAR_ACR_NAME
     acrSku: 'Basic'
-    location: param_location
-    tags: var_project_tags
+    location: PARAM_LOCATION
+    tags: VAR_SOLUTION_TAGS
     roleAssignments: [
       {
         principalId: userAssignedIdentity.outputs.principalId
@@ -145,32 +145,29 @@ module registry 'br/public:avm/res/container-registry/registry:0.6.0' = {
 }
 // conditional deployment of the Azure Container Apps environment (to be developped)
 //@onlyIfNotExists()
-//module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.8.1' = {
-//  scope: rg
-//  name: '${uniqueString(deployment().name, param_location)}-ACA-managed-environment'
-//  params: {
-//    name: var_Solution_aca_environment_name
-//    logAnalyticsWorkspaceResourceId: workspace.outputs.resourceId
-//    infrastructureResourceGroupName: var_managedEnvironment_param_rg_name
-//    infrastructureSubnetId: '${virtualNetwork.outputs.resourceId}/subnets/${var_aca_dedicated_subnet_name}'
-//    tags: var_project_tags
-//    internal: true
-//    zoneRedundant: false
-//    managedIdentities: {
-//      userAssignedResourceIds: [
-//        userAssignedIdentity.outputs.resourceId
-//      ]
-//    }
-//    workloadProfiles: [
-//      {
-//        name: 'Consumption'
-//        workloadProfileType: 'Consumption'
-//      }
-//    ]
-//  }
-//}
-output output_ky_name string = var_kv_name
-output output_acr_name string = var_acr_name
-// maintenant, il faut créer l'image Docker
-// prochaine étape, la condtruction du job
-// etape finale : créer le workflow
+module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.8.1' = {
+  scope: rg
+  name: '${uniqueString(deployment().name, PARAM_LOCATION)}-ACA-managed-environment'
+  params: {
+    name: VAR_SOLUTION_ACA_ENVIRONMENT_NAME
+    logAnalyticsWorkspaceResourceId: workspace.outputs.resourceId
+    infrastructureResourceGroupName: VAR_ACA_MANAGEDRG_NAME
+    infrastructureSubnetId: '${virtualNetwork.outputs.resourceId}/subnets/${VAR_ACA_SUBNET_NAME}'
+    tags: VAR_SOLUTION_TAGS
+    internal: true
+    zoneRedundant: false
+    managedIdentities: {
+      userAssignedResourceIds: [
+        userAssignedIdentity.outputs.resourceId
+      ]
+    }
+    workloadProfiles: [
+      {
+        name: 'Consumption'
+        workloadProfileType: 'Consumption'
+      }
+    ]
+  }
+}
+output output_ky_name string = VAR_KEYVAULT_NAME
+output output_acr_name string = VAR_ACR_NAME
