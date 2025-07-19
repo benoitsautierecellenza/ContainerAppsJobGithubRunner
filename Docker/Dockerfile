@@ -1,6 +1,20 @@
-﻿ARG BASE_IMAGE_VERSION
-FROM ${BASE_IMAGE_VERSION} as installer
-RUN sudo apt-get update #&& apt-get -y install
+ARG RUNNER_VERSION
+FROM ghcr.io/actions/actions-runner:${RUNNER_VERSION}
+
+USER root
+# install curl and jq
+RUN apt-get update && apt-get install -y curl jq && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY github-actions-runner/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
+USER runner
+ENTRYPOINT ["./entrypoint.sh"]
+
+# Install prerequisites OK
+RUN sudo apt-get update 
 RUN sudo apt-get -y install
 RUN sudo apt upgrade -y
 RUN sudo apt-get -y install ca-certificates 
@@ -18,26 +32,26 @@ RUN sudo apt-get -y install unzip
 RUN sudo apt-get -y install python3 
 RUN sudo apt-get -y install zip
 RUN sudo apt-get -y install pip
-RUN sudo apt-get update #&& apt-get -y install
-ARG DOTNET_VERSION
-ARG GITVERSION_VERSION
-ARG PS_VERSION
-RUN curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel ${DOTNET_VERSION}
-ENV PATH="/root/.dotnet:/root/.dotnet/tools:${PATH}"
-ENV DOTNET_ROOT="/root/.dotnet" 
+RUN sudo apt-get update 
 
-# Azure CLI new installation
+# Install .NET (selected version) SDK & Runtime (OK)
+ARG DOTNET_VERSION
+RUN wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+RUN sudo dpkg -i packages-microsoft-prod.deb
+RUN sudo rm packages-microsoft-prod.deb
+RUN sudo apt-get update
+RUN sudo apt-get install -y dotnet-sdk-${DOTNET_VERSION}
+
+# Azure CLI (selected version) installation
+ARG AZURECLI_VERSION
+ARG UBUNTU_LTS_VERSION
 RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg >/dev/null
 RUN echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
 RUN sudo apt-get update
-RUN sudo apt-get install azure-cli
+#RUN sudo apt-get install azure-cli
+RUN sudo apt-get install -y azure-cli=${AZURECLI_VERSION}-1~${UBUNTU_LTS_VERSION}
 
-# JFROG (latest)
-RUN curl -fL https://getcli.jfrog.io | sh
-RUN sudo mv jfrog /usr/bin/jfrog
-RUN chmod +x /usr/bin/jfrog
-
-# Install Powershell
+# Install Powershell with custom version OK
 ARG PS_VERSION
 RUN wget https://github.com/PowerShell/PowerShell/releases/download/v${PS_VERSION}/powershell_${PS_VERSION}-1.deb_amd64.deb
 RUN sudo dpkg -i powershell_${PS_VERSION}-1.deb_amd64.deb
@@ -45,7 +59,7 @@ RUN sudo apt-get install -f
 RUN rm powershell_${PS_VERSION}-1.deb_amd64.deb
 RUN sudo apt-get install -y powershell
 
-# Install PowerShell modules
+# Install PowerShell modules (fixed versions) OK
 ARG AZACCOUNTS_VERSION
 ARG AZKEYVAULT_VERSION
 ARG AZSTORAGE_VERSION
@@ -54,6 +68,7 @@ ARG AZNETWORK_VERSION
 ARG AZRESOURCES_VERSION
 ARG AZ_TABLE_VERSION
 ARG MS_GRAPH_VERSION
+ARG MS_ENTRA_VERSION
 RUN sudo pwsh -c "Install-Module -Name Az.Accounts -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZACCOUNTS_VERSION}"
 RUN sudo pwsh -c "Install-Module -Name Az.KeyVault -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZKEYVAULT_VERSION}"
 RUN sudo pwsh -c "Install-Module -Name Az.Storage -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZSTORAGE_VERSION}"
@@ -64,24 +79,33 @@ RUN sudo pwsh -c "Install-Module -Name AzTable -AllowClobber -Scope AllUsers -Fo
 RUN sudo pwsh -c "Install-Module -Name Microsoft.Graph -AllowClobber -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
 RUN sudo pwsh -c "Install-Module -name Microsoft.Graph.Authentication -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
 RUN sudo pwsh -c "Install-Module -name Microsoft.Graph.Applications -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
+RUN sudo pwsh -c "Install-Module -name Microsoft.Graph.Groups -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
+RUN sudo pwsh -c "Install-Module -name Microsoft.Graph.Users -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
+RUN sudo pwsh -c "Install-Module -name Microsoft.Entra -Scope AllUsers -Force -RequiredVersion ${MS_ENTRA_VERSION}"
+RUN sudo pwsh -c "Install-Module -Name KubeTidy -Repository PSGallery -Scope AllUsers -Force"
 
-# Install Terraform binary
+# JFROG (latest) OK
+RUN curl -fL https://getcli.jfrog.io | sh
+RUN sudo mv jfrog /usr/bin/jfrog
+RUN chmod +x /usr/bin/jfrog
+
+# Terraform (fixed version) OK
 ARG TERRAFORM_VERSION
 RUN wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
 RUN unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip && rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
 RUN sudo mv terraform /usr/bin/terraform
 
-# Install Terragrunt binary
+# Terragrunt (fixed version) OK
 ARG TERRAGRUNT_VERSION
 ADD https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64 /usr/local/bin/terragrunt
 RUN sudo chmod +x /usr/local/bin/terragrunt
 
-# Install kubectl binary
+# Add latest version of kubectl (latest) OK
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
 RUN chmod +x ./kubectl
 RUN sudo mv ./kubectl /usr/local/bin
 
-# HELM
+# HELM OK
 RUN curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 RUN sudo apt-get update

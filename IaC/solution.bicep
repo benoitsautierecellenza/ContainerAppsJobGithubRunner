@@ -1,6 +1,7 @@
 // inputs : https://github.com/mddazure/azure_verified_module_lab/blob/main/main.bicep
 
-// input projet avec les infos de VNET / Subnet et   infrastructureSubnetId:  pour ACA
+// Positionner tous les paramètres dans un JSON
+// Manque la mise en cache pour les images du runner
 
 @description('Azure region in witch solution will be deployed')
 param param_location string = 'westeurope'
@@ -20,18 +21,15 @@ param param_solution_vnet_addressprefix string = '10.0.0.0/16'
 @description('Subnet CIRD to be dedicated for Azure Container Apps environment')
 param param_solution_subnet_prefix string = '10.0.0.0/23'
 
-@description('The GitHub Access Token with permission to fetch registration-token')
-@secure()
-param param_GitHubAccessToken string = 'test'
-
-param param_guid string = newGuid()
+// En fait, j'ai un GUID à chaque exécution
+//param param_guid string = newGuid()
+param param_guid string = 'ab2cae52-3be6-4eca-87bf-3f71eb825aef'
 
 //
 // Variable section
 //
-var varSecretNameGitHubAccessToken = 'github-accesstoken'
 var var_Solution_vnet_name = '${param_environment_name}-${param_project_name}-vnet'
-var var_Solution_aca_environment_name = '${param_environment_name}--${param_project_name}-acaenv'
+var var_Solution_aca_environment_name = '${param_environment_name}-${param_project_name}-acaenv'
 var var_param_law_name = '${param_environment_name}-${param_project_name}-law'
 var var_userAssignedIdentity_name = '${param_environment_name}-${param_project_name}-uai'
 var var_guid_pattern = replace(substring(param_guid, 0, 12), '-', '')
@@ -64,16 +62,19 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.10.2' = {
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
     publicNetworkAccess: 'Enabled'
-    secrets: [
-      {
-        name: varSecretNameGitHubAccessToken
-        value: param_GitHubAccessToken
-      }
-    ]
+    secrets: []
     roleAssignments: [
       {
         principalId: userAssignedIdentity.outputs.principalId
         roleDefinitionIdOrName: 'Key Vault Secrets User'
+      }
+      {
+        principalId: deployer().objectId
+        roleDefinitionIdOrName: 'Key Vault Secrets Officer'
+      }
+      {
+        principalId: deployer().objectId
+        roleDefinitionIdOrName: '/providers/Microsoft.Authorization/roleDefinitions/fb382eab-e894-4461-af04-94435c366c3f'
       }
     ]
   }
@@ -84,7 +85,6 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.5.1' = {
   scope: rg
   params: {
     name: var_Solution_vnet_name
-    //addressPrefixes: ['10.0.0.0/16']
     addressPrefixes: [
       param_solution_vnet_addressprefix
     ]
@@ -92,7 +92,6 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.5.1' = {
     tags: var_project_tags
     subnets: [
       {
-        //        addressPrefix: '10.0.0.0/23'
         addressPrefix: param_solution_subnet_prefix
         name: var_aca_dedicated_subnet_name
         delegation: 'Microsoft.App/environments'
@@ -121,7 +120,6 @@ module userAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-id
   }
 }
 // Azure container registry with ACR pull role asignment
-// Note, pas de privatisation car problème oeuf et de la poule
 module registry 'br/public:avm/res/container-registry/registry:0.6.0' = {
   name: '${uniqueString(deployment().name, param_location)}-acr'
   scope: rg
@@ -129,7 +127,6 @@ module registry 'br/public:avm/res/container-registry/registry:0.6.0' = {
     userAssignedIdentity
   ]
   params: {
-    // name: param_acr_name
     name: var_acr_name
     acrSku: 'Basic'
     location: param_location
@@ -139,34 +136,39 @@ module registry 'br/public:avm/res/container-registry/registry:0.6.0' = {
         principalId: userAssignedIdentity.outputs.principalId
         roleDefinitionIdOrName: 'AcrPull'
       }
-    ]
-  }
-}
-// besoin de ce paramètre : https://github.com/Azure/bicep-registry-modules/blob/avm/res/app/managed-environment/0.8.1/avm/res/app/managed-environment/README.md#parameter-managedidentities
-module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.8.1' = {
-  scope: rg
-  name: '${uniqueString(deployment().name, param_location)}-ACA-managed-environment'
-  params: {
-    name: var_Solution_aca_environment_name
-    logAnalyticsWorkspaceResourceId: workspace.outputs.resourceId
-    infrastructureResourceGroupName: var_managedEnvironment_param_rg_name
-    infrastructureSubnetId: '${virtualNetwork.outputs.resourceId}/subnets/${var_aca_dedicated_subnet_name}'
-    tags: var_project_tags
-    internal: true
-    zoneRedundant: false
-    managedIdentities: {
-      userAssignedResourceIds: [
-        userAssignedIdentity.outputs.resourceId
-      ]
-    }
-    workloadProfiles: [
       {
-        name: 'Consumption'
-        workloadProfileType: 'Consumption'
+        principalId: deployer().objectId
+        roleDefinitionIdOrName: 'AcrPush'
       }
     ]
   }
 }
+// conditional deployment of the Azure Container Apps environment (to be developped)
+//@onlyIfNotExists()
+//module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.8.1' = {
+//  scope: rg
+//  name: '${uniqueString(deployment().name, param_location)}-ACA-managed-environment'
+//  params: {
+//    name: var_Solution_aca_environment_name
+//    logAnalyticsWorkspaceResourceId: workspace.outputs.resourceId
+//    infrastructureResourceGroupName: var_managedEnvironment_param_rg_name
+//    infrastructureSubnetId: '${virtualNetwork.outputs.resourceId}/subnets/${var_aca_dedicated_subnet_name}'
+//    tags: var_project_tags
+//    internal: true
+//    zoneRedundant: false
+//    managedIdentities: {
+//      userAssignedResourceIds: [
+//        userAssignedIdentity.outputs.resourceId
+//      ]
+//    }
+//    workloadProfiles: [
+//      {
+//        name: 'Consumption'
+//        workloadProfileType: 'Consumption'
+//      }
+//    ]
+//  }
+//}
 output output_ky_name string = var_kv_name
 output output_acr_name string = var_acr_name
 // maintenant, il faut créer l'image Docker
