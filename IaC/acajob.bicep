@@ -1,4 +1,5 @@
 // problème avec userAssignedIdentity qui ne sort pas le resourceID attendu
+// input pour résoudre le problème authentification Keda : https://azureossd.github.io/2024/08/23/Troubleshooting-general-KEDA-scaling-scenarios/
 
 @description('Project name ')
 param PARAM_PROJECT_NAME string = 'acarunner'
@@ -25,7 +26,7 @@ param RUNNER_IMAGE_VERSION string = '2.325.0' // Remplacer par '2.325.0' quand o
 param GITHUB_REPO_OWNER string = 'benoitsautierecellenza'
 
 @description('GitHub repository name')
-param GITHUB_REPO_NAME string = 'ContainerAppsJobGithubRunner'
+param GITHUB_REPO_NAME string = 'containerappsjobgithubrunner'
 
 @description('GitHub App ID')
 param GITHUB_APP_ID string = '1626486'
@@ -44,8 +45,6 @@ var GITHUB_RUNNER_IMAGE_PATH = '${ACR_LOGINSERVER}/${GITHUB_RUNNER_IMAGE_NAME}:$
 var ACCESS_TOKEN_API_URL = 'https://api.github.com/app/installations/${GITHUB_APP_INSTALLATION_ID}/access_tokens' 
 var GITHUB_REGISTRATION_TOKEN_API_URL = 'https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/actions/runners/registration-token' 
 var GITHUB_RUNNER_REGISTRATION_URL = 'https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}' 
-
-
 
 // existing user assigned identity
 resource userAssignedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-preview' existing = {
