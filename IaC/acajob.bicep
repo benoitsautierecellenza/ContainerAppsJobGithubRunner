@@ -1,6 +1,3 @@
-// problème avec userAssignedIdentity qui ne sort pas le resourceID attendu
-// input pour résoudre le problème authentification Keda : https://azureossd.github.io/2024/08/23/Troubleshooting-general-KEDA-scaling-scenarios/
-
 @description('Project name ')
 param PARAM_PROJECT_NAME string = 'acarunner'
 
@@ -34,7 +31,7 @@ param GITHUB_APP_ID string = '1643445'
 @description('GitHub App Installation ID')
 param GITHUB_APP_INSTALLATION_ID int = 76950829
 
-var CONTAINER_APP_ENV_NAME = '${ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-acaenv' //     fix name for the Container Apps environment   
+var CONTAINER_APP_ENV_NAME = '${ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-acaenv'
 var VAR_USERASSIGNEDIDENTITY_NAME = '${ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-uai' 
 var ACR_LOGINSERVER = '${ACR_NAME}.azurecr.io' 
 var GITHUB_RUNNER_JOB_NAME = 'githubactionrunner'
