@@ -9,7 +9,7 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
     steps:      
-    - name: show informations2
+    - name: show informations
       shell: bash  
       run: |
             az --version
