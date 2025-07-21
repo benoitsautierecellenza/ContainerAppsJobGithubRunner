@@ -29,10 +29,10 @@ param GITHUB_REPO_OWNER string = 'benoitsautierecellenza'
 param GITHUB_REPO_NAME string = 'containerappsjobgithubrunner'
 
 @description('GitHub App ID')
-param GITHUB_APP_ID string = '1626486'
+param GITHUB_APP_ID string = '1643445'
 
 @description('GitHub App Installation ID')
-param GITHUB_APP_INSTALLATION_ID int = 76457847
+param GITHUB_APP_INSTALLATION_ID int = 76950829
 
 var CONTAINER_APP_ENV_NAME = '${ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-acaenv' //     fix name for the Container Apps environment   
 var VAR_USERASSIGNEDIDENTITY_NAME = '${ENVIRONMENT_NAME}-${PARAM_PROJECT_NAME}-uai' 

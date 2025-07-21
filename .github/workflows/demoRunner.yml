@@ -21,4 +21,3 @@ jobs:
             terraform --version
             pwsh
             $psversiontable
-            az group list --query [].id
