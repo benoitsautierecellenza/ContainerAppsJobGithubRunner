@@ -1,11 +1,6 @@
 name: DemoHosted
 on:
   workflow_dispatch:
-    inputs:
-      Environment:
-        description: 'Environment Name PRD/DEV'
-        required: true
-        default: 'DEV'
 
 permissions:
   id-token: write
