@@ -1,0 +1,27 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "PARAM_LOCATION": {
+            "value": "westeurope"
+        },
+        "PARAM_ENVIRONMENT_NAME": {
+            "value": "nprd"
+        },
+        "PARAM_PROJECT_NAME": {
+            "value": "acarunner"
+        },
+        "PARAM_PROJECT_VERSION": {
+            "value": "1.0"
+        },
+        "PARAM_SOLUTION_VNET_ADDRESSPREFIX": {
+            "value": "10.0.0.0/16"
+        },
+        "PARAM_SOLUTION_SUBNET_PREFIX": {
+            "value": "10.0.0.0/23"
+        },
+        "param_guid": {
+            "value": "ab2cae52-3be6-4eca-87bf-3f71eb825aef"
+        }
+    }
+}
