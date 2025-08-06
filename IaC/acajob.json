@@ -2,37 +2,37 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "PARAM_LOCATION": {
-            "value": "westeurope"
-        },
-        "PARAM_ENVIRONMENT_NAME": {
-            "value": "nprd"
-        },
         "PARAM_PROJECT_NAME": {
             "value": "acarunner"
         },
         "PARAM_PROJECT_VERSION": {
             "value": "1.0"
         },
-        "ACR_NAME": {
+        "PARAM_LOCATION": {
+            "value": "westeurope"
+        },
+        "PARAM_ENVIRONMENT_NAME": {
+            "value": "nprd"
+        },
+        "PARAM_ACR_NAME": {
             "value": "acrnprdab2cae523be"
         },
-        "KEYVAULT_NAME": {
+        "PARAM_KEYVAULT_NAME": {
             "value": "kvab2cae523be"
         },
-        "RUNNER_IMAGE_VERSION": {
+        "PARAM_RUNNER_IMAGE_VERSION": {
             "value": "2.325.0"
         },
-        "GITHUB_REPO_OWNER": {
+        "PARAM_GITHUB_REPO_OWNER": {
             "value": "benoitsautierecellenza"
         },
-        "GITHUB_REPO_NAME": {
+        "PARAM_GITHUB_REPO_NAME": {
             "value": "containerappsjobgithubrunner"
         },
-        "GITHUB_APP_ID": {
+        "PARAM_GITHUB_APP_ID": {
             "value": "1643445"
         },
-        "GITHUB_APP_INSTALLATION_ID": {
+        "PARAM_GITHUB_APP_INSTALLATION_ID": {
             "value": 76950829
         }
     }
