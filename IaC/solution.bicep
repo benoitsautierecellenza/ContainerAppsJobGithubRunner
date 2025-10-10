@@ -1,7 +1,3 @@
-// Positionner tous les paramètres dans un JSON
-// solutionner problème du GUID à générer de manière unique
-// solutionner permission Key Vault avec GUID
-// solutionner problème des rôle assignments already exists
 
 @description('Azure region in witch solution will be deployed')
 param PARAM_LOCATION string = 'westeurope'
