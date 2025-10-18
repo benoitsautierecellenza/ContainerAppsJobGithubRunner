@@ -53,7 +53,6 @@ resource ContainerAppsEnvironment 'Microsoft.App/managedEnvironments@2025-02-02-
 }
 // resource Azure Container Registry
 resource acr 'Microsoft.ContainerRegistry/registries@2025-04-01' existing = { name: PARAM_ACR_NAME }
-// resource Key Vault
 resource kv 'Microsoft.KeyVault/vaults@2024-12-01-preview' existing = { name: PARAM_KEYVAULT_NAME }
 resource kv_secret 'Microsoft.KeyVault/vaults/secrets@2024-12-01-preview' existing = {
   name: GITHUB_PRM_SECRET
@@ -62,7 +61,6 @@ resource kv_secret 'Microsoft.KeyVault/vaults/secrets@2024-12-01-preview' existi
 
 module acj 'br/public:avm/res/app/job:0.6.0' = {
   name: '${uniqueString(deployment().name, PARAM_LOCATION)}-acj'
-
   params: {
     name: GITHUB_RUNNER_JOB_NAME
     tags: {
@@ -70,7 +68,6 @@ module acj 'br/public:avm/res/app/job:0.6.0' = {
       Environment: PARAM_ENVIRONMENT_NAME
       version: PARAM_PROJECT_VERSION
     }
-    //environmentResourceId: ContainerAppsEnvironment.outputs.resourceId
     environmentResourceId: ContainerAppsEnvironment.id
     containers: [
       {
@@ -92,7 +89,6 @@ module acj 'br/public:avm/res/app/job:0.6.0' = {
     secrets: [
       {
         name: 'pem'
-        //        keyVaultUrl: KEY_VAULT_PEMFILE_SECRET_URI // kv.outputs.uri when aca uses systemassigned-managedid -> The expression is involved in a cycle ("aca" -> "kv").
         keyVaultUrl: kv_secret.properties.secretUri
         identity: userAssignedIdentity.id // Use the resource ID for the identity
       }
