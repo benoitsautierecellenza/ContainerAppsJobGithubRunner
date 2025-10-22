@@ -1,0 +1,10 @@
+﻿créer secret SPN_CLIENT_ID_NAME
+créer secret SPN_CLIENT_SECRET
+créer secret AZUREAD_TENANT_ID
+créer secret HUB_SUBSCRIPTION_ID
+créer secret GITHUB_APP_ID
+créer secret GITHUB_APP_INSTALLATION_ID
+créer secret GHAPP_ID
+créer secret DEVCONTAINER_PEM
+
+Besoin accès registry donc d'un AdminUser

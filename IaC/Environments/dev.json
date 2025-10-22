@@ -1,0 +1,6 @@
+﻿{
+    "SOLUTION_ENVIRONMENT_NAME": "DEV",
+    "ACR_NAME": "devdacr1",
+    "GITHUB_REPO_OWNER": "benoitsautierecellenza",
+    "GITHUB_REPO_NAME": "ContainerAppsJobGithubRunner"
+}
