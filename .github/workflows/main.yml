@@ -1,0 +1,17 @@
+name: BuildRunner
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  build-and-deploy:
+    runs-on: Build-Runner
+    steps:
+    - name: show informations
+      shell: bash
+      run: |
+            az --version
+            terraform --version
+            pwsh
