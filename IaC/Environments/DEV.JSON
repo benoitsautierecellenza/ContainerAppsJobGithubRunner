@@ -1,6 +1,6 @@
 {
     "SOLUTION_ENVIRONMENT_NAME": "DEV",
-    "ACR_NAME"  : "devacr1",
+    "ACR_NAME"  : "devdacr1",
     "GHRUNNER_IMAGE_VERSION": "Latest",
     "GITHUB_REPO_OWNER": "benoitsautierecellenza",
     "GITHUB_REPO_NAME": "ContainerAppsJobGithubRunner"
