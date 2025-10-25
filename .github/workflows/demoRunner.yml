@@ -49,8 +49,7 @@ jobs:
           echo "HUB_SUBSCRIPTION_ID=${{ github.event.inputs.Environment }}_SUBSCRIPTION_ID" >> $GITHUB_ENV
           echo "GITHUB_APP_ID=${{ github.event.inputs.Environment }}_GH_APP_ID" >> $GITHUB_ENV
           echo "GITHUB_APP_INSTALLATION_ID=${{ github.event.inputs.Environment }}_GH_APP_INSTALLATION_ID" >> $GITHUB_ENV
-          echo "GHAPP_ID=${{ github.event.inputs.Environment }}_DEVCONTAINER_APPID" >> $GITHUB_ENV
-          echo "DEVCONTAINER_PEM=${{ github.event.inputs.Environment }}_DEVCONTAINER_PEM" >> $GITHUB_ENV
+          echo "GITHUB_APP_PEM=${{ github.event.inputs.Environment }}_GH_APP_PEM" >> $GITHUB_ENV
 
     - name: 'Az CLI login OpenIDConnect'
       if: ${{contains(github.ref, 'main')}}
@@ -72,8 +71,8 @@ jobs:
       uses: actions/create-github-app-token@v2
       id: app-token
       with:
-        app-id:  ${{ secrets[env.GHAPP_ID] }}
-        private-key: '${{ secrets[env.DEVCONTAINER_PEM] }}'
+        app-id:  ${{ secrets[env.GITHUB_APP_ID] }}
+        private-key: '${{ secrets[env.GITHUB_APP_PEM] }}'
         owner: ${{ github.repository_owner }}
         repositories: ${{ github.event.repository.name }}
 
