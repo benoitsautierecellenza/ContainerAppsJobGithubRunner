@@ -1,6 +1,7 @@
 ﻿#
 # Create Azure AD Application required for GitHub Action deployment of Azure Firewall As a Service
 #
+# Version 1.2 - Fixed authentication issues with Microsoft Graph module
 # Version 1.1 - Updated release to no longer rely on Azure CLI & detect missing authentication with Azure AD Entra + Azure subscription selection
 # Version 1.0 - Initial Release - Benoît SAUTIERE
 #
@@ -8,7 +9,7 @@
 #
 #Requires -PSedition Core
 #Requires -Version 7.0
-##Requir -Modules  Microsoft.Graph, Microsoft.Graph.Applications
+#Requires -Modules  Microsoft.Graph, Microsoft.Graph.Applications, Microsoft.Graph.Users
 
 Param(
     [Parameter(mandatory = $true)]
@@ -34,7 +35,7 @@ If (([string]::IsNullOrEmpty($CheckGraphContext))) {
     # OK
     # Implique le consentement de l'organisation pour les permissions
     # Connect-MgGraph -Scopes 'User.Read.All', 'Application.ReadWrite.All' -UseDeviceAuthentication -NoWelcome
-    [String]$ErrorMessage = "Not connected to Microsoft Graph, please execute Connect-MgGraph -Scopes 'User.Read.All', 'Application.ReadWrite.All' -UseDeviceAuthentication -NoWelcome"
+    [String]$ErrorMessage = "Not connected to Microsoft Graph, please execute Connect-MgGraph -Scopes 'User.Read.All', 'Application.ReadWrite.All'"
     Write-Error $ErrorMessage
     exit
 }
@@ -85,15 +86,14 @@ $CheckAADApplication = Get-MgApplication -filter "DisplayName eq '$AzureADApplic
 If (([string]::IsNullOrEmpty($CheckAADApplication))) {
     #
     # Create the Azure AP Service principal with a secret
-    #
+    # OK
     [String]$Message = "Azure AD Application named $AzureADApplicationName does not yet exists, create it."
     Write-Output $Message
     $NewAppRegistration = New-MgApplication -DisplayName $AzureADApplicationName 
     $NewOwner = @{
         "@odata.id" = "https://graph.microsoft.com/v1.0/directoryObjects/{$($CurrentGraphContext.id)}"
     }
-    New-MgApplicationOwnerByRef -ApplicationId $NewAppRegistration.Id -BodyParameter $NewOwner
-  
+    New-MgApplicationOwnerByRef -ApplicationId $NewAppRegistration.Id -BodyParameter $NewOwner  
     $passwordCred = @{
         displayName = 'Created using Create_AzureADApplication.ps1'
         endDateTime = (Get-Date).AddMonths(6)
@@ -204,6 +204,5 @@ else {
         $secret = Add-MgApplicationPassword -applicationId $CheckAADApplication.Id -PasswordCredential $passwordCred
         [String]$Message = "Secret for Azure AD Application $AzureADApplicationName created successfully : $($secret.SecretText)"
         Write-Output $Message
-
     }
 }

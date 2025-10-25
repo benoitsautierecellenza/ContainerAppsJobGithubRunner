@@ -1,4 +1,4 @@
-name: DemoHosted
+name: Build GitHub Action Runner Base Image
 
 on:
   workflow_dispatch:
