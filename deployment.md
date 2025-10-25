@@ -54,7 +54,7 @@ Using outputs from the [Create_AzureADApplication.ps1](./Scripts/Create_AzureADA
 - <Environment>_SPN_APPLICATION_CLIENT_ID : Service Principal Client ID provided by [Create_AzureADApplication.ps1](./Scripts/Create_AzureADApplication.ps1) script
 - <Environment>_SPN_APPLICATION_SECRET : Service Principal Client secret provided by [Create_AzureADApplication.ps1](./Scripts/Create_AzureADApplication.ps1) script
 
-For a `DEV` environment, variables would be named as documented below : 
+For a `DEV` environment, GitHub secrets would be named as documented below : 
 
 - DEV_AZUREAD_TENANT_ID
 - DEV_SUBSCRIPTION_ID
@@ -104,3 +104,8 @@ Create required GitHub secrets :
 - <Environment>_GH_APP_INSTALLATION_ID : GitHub App Installation ID
 - <Environment>_GH_APP_PEM : Content of the Private Key File
 
+For a `DEV` environment, GitHub secrets would be named as documented below : 
+
+- DEV_GH_APP_ID : GitHub App Client ID
+- DEV_GH_APP_INSTALLATION_ID : GitHub App Installation ID
+- DEV_GH_APP_PEM : Content of the Private Key File
