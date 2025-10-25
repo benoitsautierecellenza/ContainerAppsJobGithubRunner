@@ -134,6 +134,63 @@ jobs:
       if: steps.checkSemanticVersion.outputs.is-version-increased == 'true'
       run: echo "A new version of the Github Action Runner image is available  ${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}."
 
+    - name : Extract ACR credentials
+      id: extract_acr_credentials
+      uses: Azure/CLI@v2
+      with:
+        inlineScript: |
+          echo "Extracting ACR credentials..."
+          echo "TRIVY_USERNAME=$(az acr credential show --name ${{ env.config_ACR_NAME }} --query username --output tsv)" >> $GITHUB_ENV
+          echo "TRIVY_PASSWORD=$(az acr credential show --name ${{ env.config_ACR_NAME }} --query passwords[0].value --output tsv)" >> $GITHUB_ENV
+
+    - name: Run Trivy vulnerability scanner
+      id : TrivyContainerScan
+      uses: aquasecurity/trivy-action@0.33.0
+      with:
+        image-ref: '${{ env.config_ACR_NAME }}.azurecr.io/runner_base:${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}'
+        format: 'sarif'
+        output: 'GHRunner-trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+        scan-type: 'image'
+        ignore-unfixed: true
+        skip-files: '**/*.ps1'
+        exit-code: '0'
+        timeout: '10m'
+      env:
+          TRIVY_USERNAME: ${{ env.TRIVY_USERNAME }}
+          TRIVY_PASSWORD: ${{ env.TRIVY_PASSWORD }}
+
+    - name: Publish Trivy Scan Results
+      id: publish_Trivy_results
+      uses: actions/upload-artifact@v4
+      with:
+        name: GHRunner-Trivy-results
+        path: 'GHRunner-trivy-results.sarif'
+
+    - name: Summary Trivy Results
+      uses: azure/powershell@v2
+      id: summary-Trivy_Results
+      with:
+          azPSVersion: "latest"
+          inlineScript: |
+            $content = Get-Content .\GHRunner-trivy-results.sarif
+            $json = $content | ConvertFrom-Json
+            Write-Output "Unique CVE to be addressed : $(($json.runs.results.ruleID | Select-Object -Unique).Count)"
+            Write-Output "Top 10 CVE to be addressed : "
+            ($json.runs.results.ruleID | Group-Object | Sort-Object -Property Count -Descending | Select-Object -First 10) | Select-Object Name, Count
+
+    - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
+      id: Generate_Trivy_sbom
+      uses: aquasecurity/trivy-action@0.33.0
+      with:
+          scan-type: 'fs'
+          format: 'github'
+          output: 'dependency-results.sbom.json'
+          scan-ref: '.'
+          ignore-unfixed: true
+          list-all-pkgs: true
+          github-pat: ${{ steps.app-token.outputs.token }}
+
     - uses: Azure/CLI@v2
       with:
         inlineScript: |
