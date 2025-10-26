@@ -17,6 +17,10 @@ param param_guid string = 'ab2cae52-3be6-4eca-87bf-3f71eb825aef'
 param guid_pattern string = replace(substring(param_guid, 0, 12), '-', '')
 param KeyVault_Name string = toLower('kv-${Environment}-${guid_pattern}')
 
+param uami_keyvault_secrets_user_guid string = 'd86a3f1e-2d4f-4f12-8a6a-6f2b1e5e3c3b'
+param uami_keyvault_secrets_officer_guid string = 'fb382eab-e894-4461-af04-94435c366c3f'
+param uami_keyvault_access_policies_guid string = 'fb382eab-e894-4461-af04-94435c366c3f'
+
 // Tags to be set on all resources
 var tags = {
   Project: 'GitHub Runners on Container Apps'
@@ -150,16 +154,19 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
     // issue with role assignment, because already exists
     roleAssignments: [
       {
+        name: uami_keyvault_secrets_user_guid
         principalId: userAssignedIdentity.outputs.principalId
         roleDefinitionIdOrName: 'Key Vault Secrets User'
         description: 'Allows the UAMI to read secrets from the Key Vault'
       }
       {
+        name: uami_keyvault_secrets_officer_guid
         principalId: deployer().objectId
         roleDefinitionIdOrName: 'Key Vault Secrets Officer'
         description: 'Allows the deployer to manage secrets in the Key Vault'
       }
       {
+        name: uami_keyvault_access_policies_guid
         principalId: deployer().objectId
         roleDefinitionIdOrName: '/providers/Microsoft.Authorization/roleDefinitions/fb382eab-e894-4461-af04-94435c366c3f'
         description: 'Allows the deployer to manage Key Vault access policies'
