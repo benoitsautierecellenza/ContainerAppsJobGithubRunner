@@ -1,0 +1,17 @@
+name: 0-BuildInfrastructure
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  Build-Infrastructure:
+    runs-on: Build-Runner
+    steps:
+    - name: show informations
+      shell: bash
+      run: |
+            az --version
+            terraform --version
+            pwsh
