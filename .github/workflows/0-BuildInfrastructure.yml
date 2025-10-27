@@ -1,17 +1,79 @@
-name: 0-BuildInfrastructure
+name: 0-Build-Infrastructure
+
 on:
   workflow_dispatch:
+    inputs:
+      Environment:
+        description: 'Environment Name PRD/DEV'
+        required: true
+        default: 'DEV'
 
 permissions:
   id-token: write
   contents: read
+
 jobs:
   Build-Infrastructure:
-    runs-on: Build-Runner
+    runs-on: ubuntu-latest  
     steps:
-    - name: show informations
-      shell: bash
+    - name: Checkout
+      uses: actions/checkout@v4
+    
+    - name: Check JSON environment file
+      id: check_files
+      uses: andstor/file-existence-action@v2
+      with:
+          files: 'IaC/Environments/${{ github.event.inputs.Environment }}.JSON'
+          ignore_case: true
+          fail: true
+
+    - name: Load JSON environment file into Environment variables
+      if: steps.check_files.outputs.files_exists == 'true'
+      uses: rgarcia-phi/json-to-variables@v1.1.0
+      with:
+        filename: 'IaC/Environments/${{ github.event.inputs.Environment }}.JSON'    
+        prefix: config
+        masked: false
+
+    - name: Set environment variables required to select corresponding GitHub Action secrets
+      shell: bash  
       run: |
-            az --version
-            terraform --version
-            pwsh
+          # Set environment variables required for authentication
+          echo "SPN_CLIENT_ID_NAME=${{ github.event.inputs.Environment }}_HUB_SPN_APPLICATION_CLIENT_ID" >> $GITHUB_ENV
+          echo "SPN_CLIENT_SECRET=${{ github.event.inputs.Environment }}_HUB_SPN_APPLICATION_SECRET" >> $GITHUB_ENV
+          echo "AZUREAD_TENANT_ID=${{github.event.inputs.Environment }}_AZUREAD_TENANT_ID" >> $GITHUB_ENV
+          echo "HUB_SUBSCRIPTION_ID=${{ github.event.inputs.Environment }}_HUB_SUBSCRIPTION_ID" >> $GITHUB_ENV
+          echo "AZUREAD_SECURITY_GROUP_GUID=${{ github.event.inputs.Environment }}_AZUREAD_SECURITY_GROUP_GUID" >> $GITHUB_ENV
+
+    - name: 'Az CLI login OpenIDConnect'
+      if: ${{contains(github.ref, 'main')}}
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets[env.SPN_CLIENT_ID_NAME] }}
+        tenant-id: ${{ secrets[env.AZUREAD_TENANT_ID] }}
+        subscription-id: ${{ secrets[env.HUB_SUBSCRIPTION_ID] }}
+        enable-AzPSSession: true
+       
+    - name: 'Azure login SPN'
+      if: ${{ ! contains(github.ref, 'main')}}
+      uses: azure/login@v2
+      with:
+        creds: '{"clientId":"${{ secrets[env.SPN_CLIENT_ID_NAME] }}","clientSecret":"${{ secrets[env.SPN_CLIENT_SECRET] }}","subscriptionId":"${{ secrets[env.HUB_SUBSCRIPTION_ID] }}","tenantId":"${{ secrets[env.AZUREAD_TENANT_ID] }}"}'
+        enable-AzPSSession: true 
+
+    - name: 'Deploy Container Registry'
+      id: DeployContainerRegistry
+      uses: Azure/CLI@v2
+      with:
+        inlineScript: |
+          # Perform Azure Resource Manager template deployment at resource group
+          cd IaC/Containers/
+          az deployment group create --resource-group ${{ env.config_SOLUTION_RESOURCEGROUP_NAME }} --name "Registry-${{ github.run_id }}" --template-file registry.json --parameters ACR_NAME=${{ env.config_ACR_NAME }} ACR_SKU=${{ env.config_ACR_SKU }} ENVIRONMENT_NAME=${{ env.config_SOLUTION_ENVIRONMENT_NAME }} SERVICE_VERSION=${{ env.config_SOLUTION_VERSION }} SERVICE_TYPE=${{ env.config_SOLUTION_NAME }} MANAGED_IDENTITY=${{ env.config_SOLUTION_MANAGED_IDENTITY }} AZUREAD_SECURITY_GROUP_GUID=${{ secrets[env.AZUREAD_SECURITY_GROUP_GUID]}} LOGANALYTICS_WORKSPACE_NAME=${{ env.config_SOLUTION_LOGANALYTICSWORKSPACE_NAME }} DIAGNOSTICSSETTINGS_RETENTION_PERIOD=${{ env.config_LOGANALYTICS_WORKSPACE_RETENTION }} DEPLOYMENT_MODE=${{ env.config_DEPLOYMENT_MODE }} ACR_ADMIN_USER=${{ env.config_ACR_ADMIN_USER }} --output none
+
+    - uses: Azure/CLI@v2
+      with:
+        inlineScript: |
+          # Logoff from Azure and clean cache
+          az logout
+          az cache purge
+          az account clear
