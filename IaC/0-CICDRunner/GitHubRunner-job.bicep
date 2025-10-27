@@ -1,4 +1,4 @@
-//az deployment sub create --location westeurope --template-file GitHubRunner-job.bicep
+//az deployment group create --resource-group rg-Runner-DEV-westeurope --template-file GitHubRunner-job.bicep
 
 @description('Azure region in which solution will be deployed')
 param location string = 'westeurope'
@@ -7,13 +7,13 @@ param location string = 'westeurope'
 param Environment string = 'DEV'
 
 @description('Azure Container Registry name')
-param Acr_Name string = 'acrnprdab2cae523be'
+param Acr_Name string = 'devdacr1'
 
 @description('Azure Key Vault name')
 param KeyVault_Name string = 'kvab2cae523be'
 
 @description('GITHUB Image version')
-param Runner_Image_Tag string = '2.325.0' // Remplacer par '2.325.0' quand on veut utiliser la dernière version
+param Runner_Image_Tag string = '2.239.0' 
 
 @description('GitHub repository owner')
 param GitHub_Repo_Owner string = 'benoitsautierecellenza'
@@ -22,10 +22,10 @@ param GitHub_Repo_Owner string = 'benoitsautierecellenza'
 param GitHub_Repo_Name string = 'containerappsjobgithubrunner'
 
 @description('GitHub App ID')
-param GitHub_App_ID string = '1643445'
+param GitHub_App_ID string = '1643445' // new GitHub App dedicated to Runner
 
 @description('GitHub App Installation ID')
-param GitHub_App_Installation_ID int = 76950829
+param GitHub_App_Installation_ID int = 76950829 // new GitHub App dedicated to Runner
 
 @description('Project version')
 param Version string = '0.1'
