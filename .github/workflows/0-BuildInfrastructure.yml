@@ -39,11 +39,10 @@ jobs:
       shell: bash  
       run: |
           # Set environment variables required for authentication
-          echo "SPN_CLIENT_ID_NAME=${{ github.event.inputs.Environment }}_HUB_SPN_APPLICATION_CLIENT_ID" >> $GITHUB_ENV
-          echo "SPN_CLIENT_SECRET=${{ github.event.inputs.Environment }}_HUB_SPN_APPLICATION_SECRET" >> $GITHUB_ENV
+          echo "SPN_CLIENT_ID_NAME=${{ github.event.inputs.Environment }}_SPN_APPLICATION_CLIENT_ID" >> $GITHUB_ENV
+          echo "SPN_CLIENT_SECRET=${{ github.event.inputs.Environment }}_SPN_APPLICATION_SECRET" >> $GITHUB_ENV
           echo "AZUREAD_TENANT_ID=${{github.event.inputs.Environment }}_AZUREAD_TENANT_ID" >> $GITHUB_ENV
-          echo "HUB_SUBSCRIPTION_ID=${{ github.event.inputs.Environment }}_HUB_SUBSCRIPTION_ID" >> $GITHUB_ENV
-          echo "AZUREAD_SECURITY_GROUP_GUID=${{ github.event.inputs.Environment }}_AZUREAD_SECURITY_GROUP_GUID" >> $GITHUB_ENV
+          echo "HUB_SUBSCRIPTION_ID=${{ github.event.inputs.Environment }}_SUBSCRIPTION_ID" >> $GITHUB_ENV
 
     - name: 'Az CLI login OpenIDConnect'
       if: ${{contains(github.ref, 'main')}}
