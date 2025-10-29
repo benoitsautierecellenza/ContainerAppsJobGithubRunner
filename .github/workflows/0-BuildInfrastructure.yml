@@ -60,17 +60,15 @@ jobs:
         creds: '{"clientId":"${{ secrets[env.SPN_CLIENT_ID_NAME] }}","clientSecret":"${{ secrets[env.SPN_CLIENT_SECRET] }}","subscriptionId":"${{ secrets[env.SUBSCRIPTION_ID] }}","tenantId":"${{ secrets[env.AZUREAD_TENANT_ID] }}"}'
         enable-AzPSSession: true 
 
-    - name: 'Deploy Container Registry'
+    - name: 'GitHub Runner infrastructure'
       id: DeployContainerRegistry
       uses: Azure/CLI@v2
       with:
         inlineScript: |
           # Perform Bicep deployment at subscription scope
           cd /IaC/0-CICDRunner
-          # az deployment group create --resource-group ${{ env.config_SOLUTION_RESOURCEGROUP_NAME }} --name "Registry-${{ github.run_id }}" --template-file runner-environment.bicep --parameters ACR_NAME=${{ env.config_ACR_NAME }} ACR_SKU=${{ env.config_ACR_SKU }} ENVIRONMENT_NAME=${{ env.config_SOLUTION_ENVIRONMENT_NAME }} SERVICE_VERSION=${{ env.config_SOLUTION_VERSION }} SERVICE_TYPE=${{ env.config_SOLUTION_NAME }} MANAGED_IDENTITY=${{ env.config_SOLUTION_MANAGED_IDENTITY }} AZUREAD_SECURITY_GROUP_GUID=${{ secrets[env.AZUREAD_SECURITY_GROUP_GUID]}} LOGANALYTICS_WORKSPACE_NAME=${{ env.config_SOLUTION_LOGANALYTICSWORKSPACE_NAME }} DIAGNOSTICSSETTINGS_RETENTION_PERIOD=${{ env.config_LOGANALYTICS_WORKSPACE_RETENTION }} DEPLOYMENT_MODE=${{ env.config_DEPLOYMENT_MODE }} ACR_ADMIN_USER=${{ env.config_ACR_ADMIN_USER }} --output none
           # possible to use CIDR for ACA subnet https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/bicep-functions-cidr#cidrsubnet
           az deployment sub create --name "Registry-${{ github.run_id }}" --location ${{ env.config_LOCATION }} --template-file runner-environment.bicep --parameters deployment_location=${{ env.config_LOCATION }} Environment=${{ env.config_ENVIRONMENT }} LogAnalytics_Workspace_RetentionInDays=${{ env.config_LAW_RETENTION_DAYS }} VirtualNetwork_Prefix=${{ env.config_VIRTUALNETWORK_PREFIX }} ACA_DedicatedSubnet_Prefix=${{ env.config_ACA_SUBNET_PREFIX}} 
-
 
     - uses: Azure/CLI@v2
       with:
