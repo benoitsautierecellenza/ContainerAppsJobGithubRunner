@@ -67,8 +67,8 @@ jobs:
       with:
         inlineScript: |
           # Perform Azure Resource Manager template deployment at resource group
-          cd IaC/Containers/
-          az deployment group create --resource-group ${{ env.config_SOLUTION_RESOURCEGROUP_NAME }} --name "Registry-${{ github.run_id }}" --template-file registry.json --parameters ACR_NAME=${{ env.config_ACR_NAME }} ACR_SKU=${{ env.config_ACR_SKU }} ENVIRONMENT_NAME=${{ env.config_SOLUTION_ENVIRONMENT_NAME }} SERVICE_VERSION=${{ env.config_SOLUTION_VERSION }} SERVICE_TYPE=${{ env.config_SOLUTION_NAME }} MANAGED_IDENTITY=${{ env.config_SOLUTION_MANAGED_IDENTITY }} AZUREAD_SECURITY_GROUP_GUID=${{ secrets[env.AZUREAD_SECURITY_GROUP_GUID]}} LOGANALYTICS_WORKSPACE_NAME=${{ env.config_SOLUTION_LOGANALYTICSWORKSPACE_NAME }} DIAGNOSTICSSETTINGS_RETENTION_PERIOD=${{ env.config_LOGANALYTICS_WORKSPACE_RETENTION }} DEPLOYMENT_MODE=${{ env.config_DEPLOYMENT_MODE }} ACR_ADMIN_USER=${{ env.config_ACR_ADMIN_USER }} --output none
+          # cd IaC/Containers/
+          # az deployment group create --resource-group ${{ env.config_SOLUTION_RESOURCEGROUP_NAME }} --name "Registry-${{ github.run_id }}" --template-file registry.json --parameters ACR_NAME=${{ env.config_ACR_NAME }} ACR_SKU=${{ env.config_ACR_SKU }} ENVIRONMENT_NAME=${{ env.config_SOLUTION_ENVIRONMENT_NAME }} SERVICE_VERSION=${{ env.config_SOLUTION_VERSION }} SERVICE_TYPE=${{ env.config_SOLUTION_NAME }} MANAGED_IDENTITY=${{ env.config_SOLUTION_MANAGED_IDENTITY }} AZUREAD_SECURITY_GROUP_GUID=${{ secrets[env.AZUREAD_SECURITY_GROUP_GUID]}} LOGANALYTICS_WORKSPACE_NAME=${{ env.config_SOLUTION_LOGANALYTICSWORKSPACE_NAME }} DIAGNOSTICSSETTINGS_RETENTION_PERIOD=${{ env.config_LOGANALYTICS_WORKSPACE_RETENTION }} DEPLOYMENT_MODE=${{ env.config_DEPLOYMENT_MODE }} ACR_ADMIN_USER=${{ env.config_ACR_ADMIN_USER }} --output none
 
     - uses: Azure/CLI@v2
       with:
