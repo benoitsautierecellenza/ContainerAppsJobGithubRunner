@@ -1,6 +1,6 @@
-﻿// az deployment sub create --location westeurope --template-file runner-environment.bicep
+﻿// az deployment sub create --deployment_location westeurope --template-file runner-environment.bicep
 @description('Azure region in which solution will be deployed')
-param location string = 'westeurope'
+param deployment_location string = 'westeurope'
 
 @description('Name of the environment')
 param Environment string = 'DEV'
@@ -17,14 +17,14 @@ param ACA_DedicatedSubnet_Prefix string = '10.0.0.0/24'
 @description('Project version')
 param Version string = '0.1'
 // variables
-var ResourceGroup_Name = 'rg-Runner-${Environment}-${location}'
-var User_Assigned_Identity_Name = 'uami-Runner-${Environment}-${location}'
+var ResourceGroup_Name = 'rg-Runner-${Environment}-${deployment_location}'
+var User_Assigned_Identity_Name = 'uami-Runner-${Environment}-${deployment_location}'
 var ContainerRegistry_Name = toLower('acr${Environment}${guid_pattern}')
-var LogAnalytics_Workspace_Name = toLower('law-Runner-${Environment}-${location}')
-var ApplicationInsights_Name = 'appi-Runner-${Environment}-${location}'
-var ContainerAppsEnvironment_Name = '${Environment}-${location}-acaenv'
-var ContainerAppsEnvironment_RG_Name = 'rg-acaenv-${Environment}-${location}'
-var VirtualNetwork_Name = 'vnet-Runner-${Environment}-${location}'
+var LogAnalytics_Workspace_Name = toLower('law-Runner-${Environment}-${deployment_location}')
+var ApplicationInsights_Name = 'appi-Runner-${Environment}-${deployment_location}'
+var ContainerAppsEnvironment_Name = '${Environment}-${deployment_location}-acaenv'
+var ContainerAppsEnvironment_RG_Name = 'rg-acaenv-${Environment}-${deployment_location}'
+var VirtualNetwork_Name = 'vnet-Runner-${Environment}-${deployment_location}'
 var ACA_DedicatedSubnet  = 'subnet-aca'
 var param_guid  = 'ab2cae52-3be6-4eca-87bf-3f71eb825aef'
 var guid_pattern  = replace(substring(param_guid, 0, 12), '-', '')
@@ -42,17 +42,17 @@ var tags = {
 targetScope = 'subscription'
 resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   name: ResourceGroup_Name
-  location: location
+  deployment_location: deployment_location
   tags: tags
 }
 // User assigned identity to be used to pull image & cess secrets in Key Vault
 // https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/managed-identity/user-assigned-identity
 module userAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.0' = {
-  name: '${uniqueString(deployment().name, location)}-aca-uami'
+  name: '${uniqueString(deployment().name, deployment_location)}-aca-uami'
   scope: rg
   params: {
     name: User_Assigned_Identity_Name
-    location: location
+    deployment_location: deployment_location
     tags: tags
     enableTelemetry: true
   }
@@ -60,11 +60,11 @@ module userAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-id
 // Log Analytics Workspace for Container Apps diagnostics
 // source : https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/operational-insights/workspace
 module workspace 'br/public:avm/res/operational-insights/workspace:0.12.0' = {
-  name: '${uniqueString(deployment().name, location)}-law'
+  name: '${uniqueString(deployment().name, deployment_location)}-law'
   scope: rg
   params: {
     name: LogAnalytics_Workspace_Name
-    location: location
+    deployment_location: deployment_location
     dataRetention: LogAnalytics_Workspace_RetentionInDays
     skuName: 'PerGB2018'
     tags: tags
@@ -79,12 +79,12 @@ module workspace 'br/public:avm/res/operational-insights/workspace:0.12.0' = {
 // Application Insights
 // source : https://github.com/Azure/bicep-registry-modules/blob/main/avm/res/insights/component/README.md
 module component 'br/public:avm/res/insights/component:0.6.1' = {
-  name: '${uniqueString(deployment().name, location)}-insights'
+  name: '${uniqueString(deployment().name, deployment_location)}-insights'
   scope: rg
   params: {
     name: ApplicationInsights_Name
     workspaceResourceId: workspace.outputs.resourceId
-    location: location
+    deployment_location: deployment_location
     tags: tags
     applicationType: 'web'
     enableTelemetry: true
@@ -93,14 +93,14 @@ module component 'br/public:avm/res/insights/component:0.6.1' = {
 // Container Registry to store GitHub Runner container image
 // https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/container-registry/registry
 module registry 'br/public:avm/res/container-registry/registry:0.9.3' = {
-  name: '${uniqueString(deployment().name, location)}-acr'
+  name: '${uniqueString(deployment().name, deployment_location)}-acr'
   scope: rg
   params: {
     name: ContainerRegistry_Name
     acrSku: 'Basic'
     acrAdminUserEnabled: true
     publicNetworkAccess: 'Enabled'
-    location: location
+    deployment_location: deployment_location
     tags: tags
     cacheRules: [
       {
@@ -134,12 +134,12 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.3' = {
 // Virtual Network to be used by Container Apps environment
 // source : https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/network/virtual-network
 module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
-  name: '${uniqueString(deployment().name, location)}-vnet'
+  name: '${uniqueString(deployment().name, deployment_location)}-vnet'
   scope: rg
   params: {
     name: VirtualNetwork_Name
     addressPrefixes: [VirtualNetwork_Prefix]
-    location: location
+    deployment_location: deployment_location
     subnets: [
       {
         addressPrefix: ACA_DedicatedSubnet_Prefix
@@ -166,7 +166,7 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
 // https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/key-vault/vault
 module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
   scope: rg
-  name: '${uniqueString(deployment().name, location)}-kv'
+  name: '${uniqueString(deployment().name, deployment_location)}-kv'
   params: {
     name: KeyVault_Name
     tags: tags
@@ -202,7 +202,7 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
 // source : https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/app/managed-environment
 module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.11.3' = {
   scope: rg
-  name: '${uniqueString(deployment().name, location)}-ACAEnv'
+  name: '${uniqueString(deployment().name, deployment_location)}-ACAEnv'
   params: {
     name: ContainerAppsEnvironment_Name
     infrastructureResourceGroupName: ContainerAppsEnvironment_RG_Name

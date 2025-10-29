@@ -1,7 +1,11 @@
 {
-    "SOLUTION_ENVIRONMENT_NAME": "DEV",
+    "LOCATION"  : "westeurope",
+    "ENVIRONMENT": "DEV",
     "ACR_NAME"  : "devdacr1",
     "GHRUNNER_IMAGE_VERSION": "Latest",
+    "LAW_RETENTION_DAYS": 30,
     "GITHUB_REPO_OWNER": "benoitsautierecellenza",
-    "GITHUB_REPO_NAME": "ContainerAppsJobGithubRunner"
+    "GITHUB_REPO_NAME": "ContainerAppsJobGithubRunner",
+    "VIRTUALNETWORK_PREFIX": "10.0.0.0/16",
+    "ACA_SUBNET_PREFIX": "10.0.1.0/24"
 }
