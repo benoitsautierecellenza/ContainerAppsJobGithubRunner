@@ -42,7 +42,7 @@ var tags = {
 targetScope = 'subscription'
 resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   name: ResourceGroup_Name
-  deployment_location: deployment_location
+  location: deployment_location
   tags: tags
 }
 // User assigned identity to be used to pull image & cess secrets in Key Vault
@@ -52,7 +52,7 @@ module userAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-id
   scope: rg
   params: {
     name: User_Assigned_Identity_Name
-    deployment_location: deployment_location
+    location: deployment_location
     tags: tags
     enableTelemetry: true
   }
@@ -64,7 +64,7 @@ module workspace 'br/public:avm/res/operational-insights/workspace:0.12.0' = {
   scope: rg
   params: {
     name: LogAnalytics_Workspace_Name
-    deployment_location: deployment_location
+    location: deployment_location
     dataRetention: LogAnalytics_Workspace_RetentionInDays
     skuName: 'PerGB2018'
     tags: tags
@@ -84,7 +84,7 @@ module component 'br/public:avm/res/insights/component:0.6.1' = {
   params: {
     name: ApplicationInsights_Name
     workspaceResourceId: workspace.outputs.resourceId
-    deployment_location: deployment_location
+    location: deployment_location
     tags: tags
     applicationType: 'web'
     enableTelemetry: true
@@ -100,7 +100,7 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.3' = {
     acrSku: 'Basic'
     acrAdminUserEnabled: true
     publicNetworkAccess: 'Enabled'
-    deployment_location: deployment_location
+    location: deployment_location
     tags: tags
     cacheRules: [
       {
@@ -139,7 +139,7 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
   params: {
     name: VirtualNetwork_Name
     addressPrefixes: [VirtualNetwork_Prefix]
-    deployment_location: deployment_location
+    location: deployment_location
     subnets: [
       {
         addressPrefix: ACA_DedicatedSubnet_Prefix
