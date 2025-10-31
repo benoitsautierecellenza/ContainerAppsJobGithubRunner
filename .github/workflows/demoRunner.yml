@@ -1,4 +1,4 @@
-name: Build GitHub Action Runner Base Image
+name: Demo
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ env:
   REPOSITORY: runner_base
   
 jobs:
-  BuildGHRunnerImage:
+  Demo:
     runs-on: ubuntu-latest  
     steps:
     - name: Checkout
@@ -47,9 +47,6 @@ jobs:
           echo "SPN_CLIENT_SECRET=${{ github.event.inputs.Environment }}_SPN_APPLICATION_SECRET" >> $GITHUB_ENV
           echo "AZUREAD_TENANT_ID=${{github.event.inputs.Environment }}_AZUREAD_TENANT_ID" >> $GITHUB_ENV
           echo "HUB_SUBSCRIPTION_ID=${{ github.event.inputs.Environment }}_SUBSCRIPTION_ID" >> $GITHUB_ENV
-          echo "GITHUB_APP_ID=${{ github.event.inputs.Environment }}_GH_APP_ID" >> $GITHUB_ENV
-          echo "GITHUB_APP_INSTALLATION_ID=${{ github.event.inputs.Environment }}_GH_APP_INSTALLATION_ID" >> $GITHUB_ENV
-          echo "GITHUB_APP_PEM=${{ github.event.inputs.Environment }}_GH_APP_PEM" >> $GITHUB_ENV
 
     - name: 'Az CLI login OpenIDConnect'
       if: ${{contains(github.ref, 'main')}}
@@ -67,129 +64,11 @@ jobs:
         creds: '{"clientId":"${{ secrets[env.SPN_CLIENT_ID_NAME] }}","clientSecret":"${{ secrets[env.SPN_CLIENT_SECRET] }}","subscriptionId":"${{ secrets[env.HUB_SUBSCRIPTION_ID] }}","tenantId":"${{ secrets[env.AZUREAD_TENANT_ID] }}"}'
         enable-AzPSSession: true 
 
-    - name: Create GitHub App Token
-      uses: actions/create-github-app-token@v2
-      id: app-token
-      with:
-        app-id:  ${{ secrets[env.GITHUB_APP_ID] }}
-        private-key: '${{ secrets[env.GITHUB_APP_PEM] }}'
-        owner: ${{ github.repository_owner }}
-        repositories: ${{ github.event.repository.name }}
-
-    - name: Get latest Github Action Runnner version
-      run: |
-        GITHUBACTION_RUNNER_LATEST_TAG=$(git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/actions/runner/ '*.*.*' | tail --lines=1 | cut --delimiter='/' --fields=3)
-        GITHUBACTION_RUNNER_LATEST_TAG=$(echo "$GITHUBACTION_RUNNER_LATEST_TAG" | tr -d 'v') 
-        echo "GITHUBACTION_RUNNER_LATEST_TAG=$GITHUBACTION_RUNNER_LATEST_TAG" >> $GITHUB_ENV
-  
-    - name: Load GitHub Runner Container image applications versions
-      uses: rgarcia-phi/json-to-variables@v1.1.0
-      with:
-        filename: 'Docker/versions.json'
-        prefix: docker
-        masked: false
-   
-    - name: Build base GitHub Action Runner image
-      uses: Azure/CLI@v2
-      with:
-        inlineScript: |
-         # Build image to be used for runner
-         cd Docker
-         az acr build --registry ${{ env.config_ACR_NAME }} --image ${{ env.config_ACR_NAME }}.azurecr.io/$REPOSITORY:$GITHUBACTION_RUNNER_LATEST_TAG . --build-arg 'RUNNER_VERSION=${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}' --build-arg 'REGISTRY=${{ env.config_ACR_NAME }}' --build-arg 'DOTNET_VERSION=${{ env.docker_DOTNET_VERSION }}' --build-arg 'PS_VERSION=${{ env.docker_PS_VERSION }}' --build-arg 'AZACCOUNTS_VERSION=${{ env.docker_AZACCOUNTS_VERSION }}' --build-arg 'AZKEYVAULT_VERSION=${{ env.docker_AZKEYVAULT_VERSION }}' --build-arg 'AZSTORAGE_VERSION=${{ env.docker_AZSTORAGE_VERSION }}' --build-arg 'AZAPPINSIGHT_VERSION=${{ env.docker_AZAPPINSIGHT_VERSION }}' --build-arg 'AZNETWORK_VERSION=${{ env.docker_AZNETWORK_VERSION }}' --build-arg 'AZRESOURCES_VERSION=${{ env.docker_AZRESOURCES_VERSION }}' --build-arg 'AZ_TABLE_VERSION=${{ env.docker_AZ_TABLE_VERSION }}' --build-arg 'MS_GRAPH_VERSION=${{ env.docker_MS_GRAPH_VERSION }}' --build-arg 'MS_ENTRA_VERSION=${{ env.docker_MS_ENTRA_VERSION }}' --build-arg 'TERRAFORM_VERSION=${{ env.docker_TERRAFORM_VERSION }}' --build-arg 'TERRAGRUNT_VERSION=${{ env.docker_TERRAGRUNT_VERSION }}' --build-arg 'AZURECLI_VERSION=${{ env.docker_AZURECLI_VERSION }}' --build-arg  'UBUNTU_LTS_VERSION=${{ env.docker_UBUNTU_LTS_VERSION }}' 
-
     - name: Get Image latest version
       uses: Azure/CLI@v2
       with:
         inlineScript: |
-         # Get Latest version of the GitHub Action Runner official image in ACR registry
-         echo "Latest Runner image available : $(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository $REPOSITORY --top 1 --orderby time_desc --out tsv)"
-         echo "IMAGE_LATEST_VERSION=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository $REPOSITORY --top 1 --orderby time_desc --out tsv)" >> $GITHUB_ENV
-
-    - name: 'Az CLI login OpenIDConnect (Refresh)'
-      if: ${{contains(github.ref, 'main')}}
-      uses: azure/login@v2
-      with:
-        client-id: ${{ secrets[env.SPN_CLIENT_ID_NAME] }}
-        tenant-id: ${{ secrets[env.AZUREAD_TENANT_ID] }}
-        subscription-id: ${{ secrets[env.HUB_SUBSCRIPTION_ID] }}
-        enable-AzPSSession: true
-      
-    - name: Get GHRunner custom image latest version
-      if: ${{ env.config_GHRUNNER_IMAGE_VERSION == 'Latest' }} 
-      uses: Azure/CLI@v2
-      with:
-        inlineScript: |
-          # Get Latest version of the GitHub Action Runner custom image in ACR registry
-          echo "IMAGE_LATEST_VERSION=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository $REPOSITORY --top 1 --orderby time_desc --out tsv)" >> $GITHUB_ENV
-
-    - name : Check if Runner image version is the latest
-      id: checkSemanticVersion
-      uses: aleoyakas/check-semver-increased-action@v1
-      with:
-        current-version: ${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}
-        previous-version: ${{ env.IMAGE_LATEST_VERSION }}
-
-    - name: New Runner version available
-      id : NewRunnerversionavailable
-      if: steps.checkSemanticVersion.outputs.is-version-increased == 'true'
-      run: echo "A new version of the Github Action Runner image is available  ${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}."
-
-    - name : Extract ACR credentials
-      id: extract_acr_credentials
-      uses: Azure/CLI@v2
-      with:
-        inlineScript: |
-          echo "Extracting ACR credentials..."
-          echo "TRIVY_USERNAME=$(az acr credential show --name ${{ env.config_ACR_NAME }} --query username --output tsv)" >> $GITHUB_ENV
-          echo "TRIVY_PASSWORD=$(az acr credential show --name ${{ env.config_ACR_NAME }} --query passwords[0].value --output tsv)" >> $GITHUB_ENV
-
-    - name: Run Trivy vulnerability scanner
-      id : TrivyContainerScan
-      uses: aquasecurity/trivy-action@0.33.0
-      with:
-        image-ref: '${{ env.config_ACR_NAME }}.azurecr.io/runner_base:${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}'
-        format: 'sarif'
-        output: 'GHRunner-trivy-results.sarif'
-        severity: 'CRITICAL,HIGH'
-        scan-type: 'image'
-        ignore-unfixed: true
-        skip-files: '**/*.ps1'
-        exit-code: '0'
-        timeout: '10m'
-      env:
-          TRIVY_USERNAME: ${{ env.TRIVY_USERNAME }}
-          TRIVY_PASSWORD: ${{ env.TRIVY_PASSWORD }}
-
-    - name: Publish Trivy Scan Results
-      id: publish_Trivy_results
-      uses: actions/upload-artifact@v4
-      with:
-        name: GHRunner-Trivy-results
-        path: 'GHRunner-trivy-results.sarif'
-
-    - name: Summary Trivy Results
-      uses: azure/powershell@v2
-      id: summary-Trivy_Results
-      with:
-          azPSVersion: "latest"
-          inlineScript: |
-            $content = Get-Content .\GHRunner-trivy-results.sarif
-            $json = $content | ConvertFrom-Json
-            Write-Output "Unique CVE to be addressed : $(($json.runs.results.ruleID | Select-Object -Unique).Count)"
-            Write-Output "Top 10 CVE to be addressed : "
-            ($json.runs.results.ruleID | Group-Object | Sort-Object -Property Count -Descending | Select-Object -First 10) | Select-Object Name, Count
-
-    - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
-      id: Generate_Trivy_sbom
-      uses: aquasecurity/trivy-action@0.33.0
-      with:
-          scan-type: 'fs'
-          format: 'github'
-          output: 'dependency-results.sbom.json'
-          scan-ref: '.'
-          ignore-unfixed: true
-          list-all-pkgs: true
-          github-pat: ${{ steps.app-token.outputs.token }}
+          az --version
 
     - uses: Azure/CLI@v2
       with:
