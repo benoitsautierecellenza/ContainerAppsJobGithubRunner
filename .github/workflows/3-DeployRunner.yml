@@ -75,13 +75,23 @@ jobs:
           # Update Key Vault secrets for GitHub Runner App authentication
           az keyvault secret set --vault-name ${{ env.config_KEYVAULT_NAME }} --name "GitHubPEM" --value "${{ secrets[env.GHRUNNER_APP_PEM] }}"
 
-    - name: Get GHRunner custom image latest version
+    - name: Get GHRunner custom image latest version (Latest)
+      id: GetLatestVersion
       if: ${{ env.config_GHRUNNER_IMAGE_VERSION == 'Latest' }} 
       uses: Azure/CLI@v2
       with:
         inlineScript: |
           # Get Latest version of the GitHub Action Runner custom image in ACR registry
           echo "IMAGE_LATEST_VERSION=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository runner_base --top 1 --orderby time_desc --out tsv)" >> $GITHUB_ENV
+
+    - name: Get GHRunner custom image latest version 
+      id: GetFixedVersion
+      if: ${{ env.config_GHRUNNER_IMAGE_VERSION != 'Latest' }} 
+      uses: Azure/CLI@v2
+      with:
+        inlineScript: |
+          # Get Latest version of the GitHub Action Runner custom image in ACR registry
+          echo "IMAGE_LATEST_VERSION=${{ env.config_GHRUNNER_IMAGE_VERSION }}" >> $GITHUB_ENV
 
     - name : Check if Runner image version is the latest
       id: checkSemanticVersion
