@@ -75,6 +75,44 @@ jobs:
           # Update Key Vault secrets for GitHub Runner App authentication
           az keyvault secret set --vault-name ${{ env.config_KEYVAULT_NAME }} --name "GitHubPEM" --value "${{ secrets[env.GHRUNNER_APP_PEM] }}"
 
+    - name: Get GHRunner custom image latest version
+      if: ${{ env.config_GHRUNNER_IMAGE_VERSION == 'Latest' }} 
+      uses: Azure/CLI@v2
+      with:
+        inlineScript: |
+          # Get Latest version of the GitHub Action Runner custom image in ACR registry
+          echo "IMAGE_LATEST_VERSION=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository runner_base --top 1 --orderby time_desc --out tsv)" >> $GITHUB_ENV
+
+    - name : Check if Runner image version is the latest
+      id: checkSemanticVersion
+      uses: aleoyakas/check-semver-increased-action@v1
+      with:
+        current-version: ${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}
+        previous-version: ${{ env.IMAGE_LATEST_VERSION }}
+
+    - name: New Runner version available
+      id : NewRunnerversionavailable
+      if: steps.checkSemanticVersion.outputs.is-version-increased == 'true'
+      run: echo "A new version of thr Github Action Runner image is available  ${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}."
+
+    - name: Get GHRunner custom image selected version
+      id: CheckSelected
+      if: ${{ env.config_GHRUNNER_IMAGE_VERSION != 'Latest' }} 
+      uses: Azure/CLI@v2
+      with:
+        inlineScript: |
+          # Get version of the GitHub Action Runner as provided in the environment JSON file
+          CheckVersion=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository runner_base --output tsv)
+          if  echo "$CheckVersion" | grep -q "${{ env.config_GHRUNNER_IMAGE_VERSION }}"; then
+            echo "Image tag ${{ env.config_GHRUNNER_IMAGE_VERSION }} exists in repository runner_base of registry ${{ env.config_ACR_NAME }}."
+            echo "IMAGE_LATEST_VERSION=${{ env.config_GHRUNNER_IMAGE_VERSION }}" >> $GITHUB_ENV
+          else
+            echo "Image tag ${{ env.config_GHRUNNER_IMAGE_VERSION }} does not exists for repository runner_base of registry ${{ env.config_ACR_NAME }}."
+            exit 1
+          fi
+          echo "Image to be deployed : $IMAGE_LATEST_VERSION"
+          echo "IMAGE_LATEST_VERSION=${{ env.config_GHRUNNER_IMAGE_VERSION }}" >> $GITHUB_ENV
+
     - name: 'Deploy GitHub Runner Job'
       id: DeployContainerJob
       uses: Azure/CLI@v2
@@ -82,8 +120,7 @@ jobs:
         inlineScript: |
           # Perform Bicep deployment at resource group level
           cd IaC/0-CICDRunner
-          # az deployment sub create --name "Registry-${{ github.run_id }}" --location=${{ env.config_LOCATION }} --template-file runner-environment.bicep --parameters ContainerRegistry_Name=${{ env.config_ACR_NAME }} deployment_location=${{ env.config_LOCATION }} Environment=${{ env.config_ENVIRONMENT }} LogAnalytics_Workspace_RetentionInDays=${{ env.config_LAW_RETENTION_DAYS }} VirtualNetwork_Prefix=${{ env.config_VIRTUALNETWORK_PREFIX }} ACA_DedicatedSubnet_Prefix=${{ env.config_ACA_SUBNET_PREFIX}} Version=${{ env.config_VERSION }} KeyVault_Name=${{ env.config_KEYVAULT_NAME }}
-          az deployment group create --resource-group ${{ env.config_LOCATION }} --template-file GitHubRunner-job.bicep --parameters location=${{ env.config_LOCATION }} Environment=${{ env.config_ENVIRONMENT }} Acr_Name string=${{ env.config_ACR_NAME }} KeyVault_Name=${{ env.config_KEYVAULT_NAME }} Runner_Image_Tag='2.329.0' GitHub_Repo_Owner=${{ env.config_GITHUB_REPO_OWNER }} GitHub_Repo_Name=${{ env.config_GITHUB_REPO_NAME }} GitHub_App_ID=${{ env.config_GHRUNNER_APP_ID }} GitHub_App_Installation_ID=${{ env.config_GHRUNNER_APP_INSTALLATION_ID }} Version=${{ env.config_VERSION }} 
+          az deployment group create --resource-group ${{ env.config_LOCATION }} --template-file GitHubRunner-job.bicep --parameters location=${{ env.config_LOCATION }} Environment=${{ env.config_ENVIRONMENT }} Acr_Name=${{ env.config_ACR_NAME }} KeyVault_Name=${{ env.config_KEYVAULT_NAME }} Runner_Image_Tag=${{ env.IMAGE_LATEST_VERSION }} GitHub_Repo_Owner=${{ env.config_GITHUB_REPO_OWNER }} GitHub_Repo_Name=${{ env.config_GITHUB_REPO_NAME }} GitHub_App_ID=${{ env.config_GHRUNNER_APP_ID }} GitHub_App_Installation_ID=${{ env.config_GHRUNNER_APP_INSTALLATION_ID }} Version=${{ env.config_VERSION }}
 
     - uses: Azure/CLI@v2
       with:
