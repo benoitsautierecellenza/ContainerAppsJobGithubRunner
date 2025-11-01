@@ -1,5 +1,6 @@
 {
     "LOCATION"  : "westeurope",
+    "VERSION": "0.1",
     "ENVIRONMENT": "DEV",
     "ACR_NAME"  : "acrdevab2cae523be",
     "GHRUNNER_IMAGE_VERSION": "Latest",
