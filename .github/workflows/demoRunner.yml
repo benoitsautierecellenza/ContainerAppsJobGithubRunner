@@ -61,12 +61,6 @@ jobs:
         creds: '{"clientId":"${{ secrets[env.SPN_CLIENT_ID_NAME] }}","clientSecret":"${{ secrets[env.SPN_CLIENT_SECRET] }}","subscriptionId":"${{ secrets[env.HUB_SUBSCRIPTION_ID] }}","tenantId":"${{ secrets[env.AZUREAD_TENANT_ID] }}"}'
         enable-AzPSSession: true 
 
-    - name: Get Image latest version
-      uses: Azure/CLI@v2
-      with:
-        inlineScript: |
-          az --version
-
     - uses: Azure/CLI@v2
       with:
         inlineScript: |
