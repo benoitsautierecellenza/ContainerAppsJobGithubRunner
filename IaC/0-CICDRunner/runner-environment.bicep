@@ -31,12 +31,12 @@ var ApplicationInsights_Name = 'appi-Runner-${Environment}-${deployment_location
 var ContainerAppsEnvironment_Name = '${Environment}-${deployment_location}-acaenv'
 var ContainerAppsEnvironment_RG_Name = 'rg-acaenv-${Environment}-${deployment_location}'
 var VirtualNetwork_Name = 'vnet-Runner-${Environment}-${deployment_location}'
-var ACA_DedicatedSubnet  = 'subnet-aca'
+var ACA_DedicatedSubnet = 'subnet-aca'
 // var param_guid  = 'ab2cae52-3be6-4eca-87bf-3f71eb825aef'
 // var guid_pattern  = replace(substring(param_guid, 0, 12), '-', '')
-var uami_keyvault_secrets_user_guid = 'd86a3f1e-2d4f-4f12-8a6a-6f2b1e5e3c3b' 
-var uami_keyvault_secrets_officer_guid = 'fb382eab-e894-4461-af04-94435c366c3f' 
-var uami_keyvault_access_policies_guid = 'fb382eab-e894-4461-af04-94435c366c3e' 
+var uami_keyvault_secrets_user_guid = 'd86a3f1e-2d4f-4f12-8a6a-6f2b1e5e3c3b'
+var uami_keyvault_secrets_officer_guid = 'fb382eab-e894-4461-af04-94435c366c3f'
+var uami_keyvault_access_policies_guid = 'fb382eab-e894-4461-af04-94435c366c3e'
 // var KeyVault_Name = toLower('kv0-${Environment}-${guid_pattern}')
 var tags = {
   Project: 'GitHub Runners on Container Apps'
@@ -247,7 +247,38 @@ module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.11.3' = {
       //  sharedKey: workspace.outputs.primarySharedKey
       //}
     }
-    appInsightsConnectionString : component.outputs.connectionString
+    appInsightsConnectionString: component.outputs.connectionString
     enableTelemetry: true
+  }
+}
+// diagnostics settings for Azure Container Apps Managed Environment
+resource acaEnvDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+  scope: ACAmanagedEnv
+  name: '${uniqueString(deployment().name, deployment_location)}-acaenv-diagnostics'
+
+  properties: {
+    eventHubAuthorizationRuleId: 'string'
+    eventHubName: 'string'
+    logs: [
+      {
+        category: 'ContainerAppConsoleLogs'
+        enabled: true
+      }
+      {
+        category: 'ContainerAppSystemLogs'
+        enabled: true
+      }
+      {
+        category: 'AppEnvSessionConsoleLogs'
+        enabled: true
+      }
+    ]
+    metrics: [
+      {
+        category: 'AllMetrics'
+        enabled: true
+      }
+    ]
+    workspaceId: workspace.outputs.logAnalyticsWorkspaceId
   }
 }
