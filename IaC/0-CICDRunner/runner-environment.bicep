@@ -252,32 +252,33 @@ module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.11.3' = {
   }
 }
 // diagnostics settings for Azure Container Apps Managed Environment
-resource acaEnvDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-  scope: ACAmanagedEnv
-  name: '${uniqueString(deployment().name, deployment_location)}-acaenv-diagnostics'
-  properties: {
-    eventHubAuthorizationRuleId: 'string'
-    eventHubName: 'string'
-    logs: [
-      {
-        category: 'ContainerAppConsoleLogs'
-        enabled: true
-      }
-      {
-        category: 'ContainerAppSystemLogs'
-        enabled: true
-      }
-      {
-        category: 'AppEnvSessionConsoleLogs'
-        enabled: true
-      }
-    ]
-    metrics: [
-      {
-        category: 'AllMetrics'
-        enabled: true
-      }
-    ]
-    workspaceId: workspace.outputs.logAnalyticsWorkspaceId
-  }
-}
+// Issue to be fixed on scope
+// resource acaEnvDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
+//  scope: ACAmanagedEnv
+//  name: '${uniqueString(deployment().name, deployment_location)}-acaenv-diagnostics'
+//  properties: {
+//    eventHubAuthorizationRuleId: 'string'
+//    eventHubName: 'string'
+//    logs: [
+//      {
+//        category: 'ContainerAppConsoleLogs'
+//        enabled: true
+//      }
+//      {
+//        category: 'ContainerAppSystemLogs'
+//        enabled: true
+//      }
+//      {
+//        category: 'AppEnvSessionConsoleLogs'
+//        enabled: true
+//      }
+//    ]
+//    metrics: [
+//      {
+//        category: 'AllMetrics'
+//        enabled: true
+//      }
+//    ]
+//    workspaceId: workspace.outputs.logAnalyticsWorkspaceId
+//  }
+//}
