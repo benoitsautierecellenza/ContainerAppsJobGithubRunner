@@ -84,9 +84,9 @@ jobs:
           # Get Latest version of the GitHub Action Runner custom image in ACR registry
           echo "IMAGE_LATEST_VERSION=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository runner_base --top 1 --orderby time_desc --out tsv)" >> $GITHUB_ENV
 
-    - name: Get GHRunner custom image fixed version 
+    - name: Get GHRunner custom image fixed version
       id: GetFixedVersion
-      if: ${{ env.config_GHRUNNER_IMAGE_VERSION == 'Latest' }} 
+      if: ${{ env.config_GHRUNNER_IMAGE_VERSION != 'Latest' }} 
       uses: Azure/CLI@v2
       with:
         inlineScript: |
@@ -95,7 +95,7 @@ jobs:
 
     - name: Get GHRunner custom image selected version (To be tested)
       id: CheckSelected
-      if: ${{ env.config_GHRUNNER_IMAGE_VERSION != 'Latest' }} 
+      if: ${{ env.config_GHRUNNER_IMAGE_VERSION == 'Latest' }} 
       uses: Azure/CLI@v2
       with:
         inlineScript: |
