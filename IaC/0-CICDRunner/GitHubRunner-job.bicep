@@ -13,7 +13,7 @@ param Acr_Name string = 'acrdevab2cae523be'
 param KeyVault_Name string = 'kv0-dev-ab2cae523be'
 
 @description('GITHUB Image version')
-param Runner_Image_Tag string = '2.239.0' 
+param Runner_Image_Tag string = '2.329.0' 
 
 @description('GitHub repository owner')
 param GitHub_Repo_Owner string = 'benoitsautierecellenza'
