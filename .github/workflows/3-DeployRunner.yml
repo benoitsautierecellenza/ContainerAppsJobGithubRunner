@@ -95,7 +95,7 @@ jobs:
 
     - name: Get GHRunner custom image selected version (To be tested)
       id: CheckSelected
-      if: ${{ env.config_GHRUNNER_IMAGE_VERSION == 'Latest' }} 
+      if: ${{ env.config_GHRUNNER_IMAGE_VERSION != 'Latest' }} 
       uses: Azure/CLI@v2
       with:
         inlineScript: |
