@@ -104,12 +104,11 @@ jobs:
           if  echo "$CheckVersion" | grep -q "${{ env.config_GHRUNNER_IMAGE_VERSION }}"; then
             echo "Image tag ${{ env.config_GHRUNNER_IMAGE_VERSION }} exists in repository runner_base of registry ${{ env.config_ACR_NAME }}."
             echo "IMAGE_LATEST_VERSION=${{ env.config_GHRUNNER_IMAGE_VERSION }}" >> $GITHUB_ENV
+            echo "Image to be deployed : $IMAGE_LATEST_VERSION"
           else
             echo "Image tag ${{ env.config_GHRUNNER_IMAGE_VERSION }} does not exists for repository runner_base of registry ${{ env.config_ACR_NAME }}."
             exit 1
           fi
-          echo "Image to be deployed : $IMAGE_LATEST_VERSION"
-          echo "IMAGE_LATEST_VERSION=${{ env.config_GHRUNNER_IMAGE_VERSION }}" >> $GITHUB_ENV
 
     - name: 'Deploy GitHub Runner Job'
       id: DeployContainerJob
