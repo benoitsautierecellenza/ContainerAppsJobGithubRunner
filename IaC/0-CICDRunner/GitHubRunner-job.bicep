@@ -7,10 +7,10 @@ param location string = 'westeurope'
 param Environment string = 'DEV'
 
 @description('Azure Container Registry name')
-param Acr_Name string = 'devdacr1'
+param Acr_Name string = 'acrdevab2cae523be'
 
 @description('Azure Key Vault name')
-param KeyVault_Name string = 'kvab2cae523be'
+param KeyVault_Name string = 'kv0-dev-ab2cae523be'
 
 @description('GITHUB Image version')
 param Runner_Image_Tag string = '2.239.0' 
@@ -22,10 +22,10 @@ param GitHub_Repo_Owner string = 'benoitsautierecellenza'
 param GitHub_Repo_Name string = 'containerappsjobgithubrunner'
 
 @description('GitHub App ID')
-param GitHub_App_ID string = '1643445' // new GitHub App dedicated to Runner
+param GitHub_App_ID string = '2217820' // new GitHub App dedicated to Runner
 
 @description('GitHub App Installation ID')
-param GitHub_App_Installation_ID int = 76950829 // new GitHub App dedicated to Runner
+param GitHub_App_Installation_ID int = 92595238 // new GitHub App dedicated to Runner
 
 @description('Project version')
 param Version string = '0.1'
