@@ -255,7 +255,6 @@ module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.11.3' = {
 resource acaEnvDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
   scope: ACAmanagedEnv
   name: '${uniqueString(deployment().name, deployment_location)}-acaenv-diagnostics'
-
   properties: {
     eventHubAuthorizationRuleId: 'string'
     eventHubName: 'string'
