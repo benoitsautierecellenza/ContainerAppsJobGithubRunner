@@ -84,28 +84,16 @@ jobs:
           # Get Latest version of the GitHub Action Runner custom image in ACR registry
           echo "IMAGE_LATEST_VERSION=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository runner_base --top 1 --orderby time_desc --out tsv)" >> $GITHUB_ENV
 
-    - name: Get GHRunner custom image latest version 
+    - name: Get GHRunner custom image fixed version 
       id: GetFixedVersion
-      if: ${{ env.config_GHRUNNER_IMAGE_VERSION != 'Latest' }} 
+      if: ${{ env.config_GHRUNNER_IMAGE_VERSION == 'Latest' }} 
       uses: Azure/CLI@v2
       with:
         inlineScript: |
           # Get Latest version of the GitHub Action Runner custom image in ACR registry
           echo "IMAGE_LATEST_VERSION=${{ env.config_GHRUNNER_IMAGE_VERSION }}" >> $GITHUB_ENV
 
-    - name : Check if Runner image version is the latest
-      id: checkSemanticVersion
-      uses: aleoyakas/check-semver-increased-action@v1
-      with:
-        current-version: ${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}
-        previous-version: ${{ env.IMAGE_LATEST_VERSION }}
-
-    - name: New Runner version available
-      id : NewRunnerversionavailable
-      if: steps.checkSemanticVersion.outputs.is-version-increased == 'true'
-      run: echo "A new version of thr Github Action Runner image is available  ${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}."
-
-    - name: Get GHRunner custom image selected version
+    - name: Get GHRunner custom image selected version (To be tested)
       id: CheckSelected
       if: ${{ env.config_GHRUNNER_IMAGE_VERSION != 'Latest' }} 
       uses: Azure/CLI@v2
