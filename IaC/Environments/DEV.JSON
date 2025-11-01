@@ -1,5 +1,6 @@
 {
     "LOCATION"  : "westeurope",
+    "KEYVAULT_NAME": "kv0-dev-ab2cae523be",
     "VERSION": "0.1",
     "ENVIRONMENT": "DEV",
     "ACR_NAME"  : "acrdevab2cae523be",

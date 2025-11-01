@@ -17,6 +17,9 @@ param VirtualNetwork_Prefix string
 @description('Azure Container Apps dedicated subnet name')
 param ACA_DedicatedSubnet_Prefix string
 
+@description('Name of the Key Vault')
+param KeyVault_Name string
+
 @description('Project version')
 param Version string
 // variables
@@ -29,12 +32,12 @@ var ContainerAppsEnvironment_Name = '${Environment}-${deployment_location}-acaen
 var ContainerAppsEnvironment_RG_Name = 'rg-acaenv-${Environment}-${deployment_location}'
 var VirtualNetwork_Name = 'vnet-Runner-${Environment}-${deployment_location}'
 var ACA_DedicatedSubnet  = 'subnet-aca'
-var param_guid  = 'ab2cae52-3be6-4eca-87bf-3f71eb825aef'
-var guid_pattern  = replace(substring(param_guid, 0, 12), '-', '')
+// var param_guid  = 'ab2cae52-3be6-4eca-87bf-3f71eb825aef'
+// var guid_pattern  = replace(substring(param_guid, 0, 12), '-', '')
 var uami_keyvault_secrets_user_guid = 'd86a3f1e-2d4f-4f12-8a6a-6f2b1e5e3c3b' 
 var uami_keyvault_secrets_officer_guid = 'fb382eab-e894-4461-af04-94435c366c3f' 
 var uami_keyvault_access_policies_guid = 'fb382eab-e894-4461-af04-94435c366c3e' 
-var KeyVault_Name = toLower('kv0-${Environment}-${guid_pattern}')
+// var KeyVault_Name = toLower('kv0-${Environment}-${guid_pattern}')
 var tags = {
   Project: 'GitHub Runners on Container Apps'
   Environment: Environment
@@ -224,12 +227,25 @@ module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.11.3' = {
         workloadProfileType: 'Consumption'
       }
     ]
-    appLogsConfiguration: {
-      destination: 'log-analytics'
-      logAnalyticsConfiguration: {
-        customerId: workspace.outputs.logAnalyticsWorkspaceId
-        sharedKey: workspace.outputs.primarySharedKey
+    openTelemetryConfiguration: {
+      logsConfiguration: {
+        destinations: [
+          'appInsights'
+        ]
       }
+      tracesConfiguration: {
+        destinations: [
+          'appInsights'
+        ]
+      }
+    }
+    appLogsConfiguration: {
+      // destination: 'log-analytics'
+      destination: 'azure-monitor'
+      //logAnalyticsConfiguration: {
+      //  customerId: workspace.outputs.logAnalyticsWorkspaceId
+      //  sharedKey: workspace.outputs.primarySharedKey
+      //}
     }
     appInsightsConnectionString : component.outputs.connectionString
     enableTelemetry: true
