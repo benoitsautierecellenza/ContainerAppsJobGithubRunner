@@ -17,7 +17,7 @@ env:
   REPOSITORY: runner_base
   
 jobs:
-  3-DeployGHRunner:
+  DeployGHRunner:
     runs-on: ubuntu-latest  
     steps:
     - name: Checkout
