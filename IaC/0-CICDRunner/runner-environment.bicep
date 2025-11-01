@@ -1,25 +1,28 @@
 ﻿// az deployment sub create --deployment_location westeurope --template-file runner-environment.bicep
 @description('Azure region in which solution will be deployed')
-param deployment_location string = 'westeurope'
+param deployment_location string
+
+@description('Name of the Container Registry')
+param ContainerRegistry_Name string
 
 @description('Name of the environment')
-param Environment string = 'DEV'
+param Environment string
 
 @description('Log Analytics Workspace retention in days')
-param LogAnalytics_Workspace_RetentionInDays int = 30
+param LogAnalytics_Workspace_RetentionInDays int
 
 @description('Virtual Network address space prefix')
-param VirtualNetwork_Prefix string = '10.0.0.0/16'
+param VirtualNetwork_Prefix string
 
 @description('Azure Container Apps dedicated subnet name')
-param ACA_DedicatedSubnet_Prefix string = '10.0.0.0/24'
+param ACA_DedicatedSubnet_Prefix string
 
 @description('Project version')
-param Version string = '0.1'
+param Version string
 // variables
 var ResourceGroup_Name = 'rg-Runner-${Environment}-${deployment_location}'
 var User_Assigned_Identity_Name = 'uami-Runner-${Environment}-${deployment_location}'
-var ContainerRegistry_Name = toLower('acr${Environment}${guid_pattern}')
+//var ContainerRegistry_Name = toLower('acr${Environment}${guid_pattern}')
 var LogAnalytics_Workspace_Name = toLower('law-Runner-${Environment}-${deployment_location}')
 var ApplicationInsights_Name = 'appi-Runner-${Environment}-${deployment_location}'
 var ContainerAppsEnvironment_Name = '${Environment}-${deployment_location}-acaenv'
