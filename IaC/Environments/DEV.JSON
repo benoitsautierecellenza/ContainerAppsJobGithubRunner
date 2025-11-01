@@ -1,7 +1,7 @@
 {
     "LOCATION"  : "westeurope",
     "ENVIRONMENT": "DEV",
-    "ACR_NAME"  : "devdacr1",
+    "ACR_NAME"  : "acrdevab2cae523be",
     "GHRUNNER_IMAGE_VERSION": "Latest",
     "LAW_RETENTION_DAYS": 30,
     "GITHUB_REPO_OWNER": "benoitsautierecellenza",
