@@ -113,12 +113,14 @@ jobs:
 
     - name: 'Deploy GitHub Runner Job'
       id: DeployContainerJob
+      env:
+        RG_NAME: 'rg-Runner-${{ env.config_ENVIRONMENT }}-${{ env.config_LOCATION }}'
       uses: Azure/CLI@v2
       with:
         inlineScript: |
           # Perform Bicep deployment at resource group level
           cd IaC/0-CICDRunner
-          az deployment group create --resource-group 'rg-Runner-${{ env.config_ENVIRONMENT }}-${{ env.config_LOCATION }}' --template-file GitHubRunner-job.bicep --parameters location=${{ env.config_LOCATION }} Environment=${{ env.config_ENVIRONMENT }} Acr_Name=${{ env.config_ACR_NAME }} KeyVault_Name=${{ env.config_KEYVAULT_NAME }} Runner_Image_Tag=${{ env.IMAGE_LATEST_VERSION }} GitHub_Repo_Owner=${{ env.config_GITHUB_REPO_OWNER }} GitHub_Repo_Name=${{ env.config_GITHUB_REPO_NAME }} GitHub_App_ID=${{ secrets[env.GHRUNNER_APP_ID] }} GitHub_App_Installation_ID=${{ secrets[env.GHRUNNER_APP_INSTALLATION_ID] }} Version=${{ env.config_VERSION }}
+          az deployment group create --resource-group $RG_NAME --template-file GitHubRunner-job.bicep --parameters location=${{ env.config_LOCATION }} Environment=${{ env.config_ENVIRONMENT }} Acr_Name=${{ env.config_ACR_NAME }} KeyVault_Name=${{ env.config_KEYVAULT_NAME }} Runner_Image_Tag=${{ env.IMAGE_LATEST_VERSION }} GitHub_Repo_Owner=${{ env.config_GITHUB_REPO_OWNER }} GitHub_Repo_Name=${{ env.config_GITHUB_REPO_NAME }} GitHub_App_ID=${{ secrets[env.GHRUNNER_APP_ID] }} GitHub_App_Installation_ID=${{ secrets[env.GHRUNNER_APP_INSTALLATION_ID] }} Version=${{ env.config_VERSION }}
 
     - uses: Azure/CLI@v2
       with:
