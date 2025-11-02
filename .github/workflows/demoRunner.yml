@@ -60,11 +60,3 @@ jobs:
       with:
         creds: '{"clientId":"${{ secrets[env.SPN_CLIENT_ID_NAME] }}","clientSecret":"${{ secrets[env.SPN_CLIENT_SECRET] }}","subscriptionId":"${{ secrets[env.HUB_SUBSCRIPTION_ID] }}","tenantId":"${{ secrets[env.AZUREAD_TENANT_ID] }}"}'
         enable-AzPSSession: true 
-
-    - uses: Azure/CLI@v2
-      with:
-        inlineScript: |
-          # Logoff from Azure and clean cache
-          az logout
-          az cache purge
-          az account clear
