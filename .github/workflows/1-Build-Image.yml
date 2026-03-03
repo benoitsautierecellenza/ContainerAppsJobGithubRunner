@@ -145,7 +145,7 @@ jobs:
 
     - name: Run Trivy vulnerability scanner
       id : TrivyContainerScan
-      uses: aquasecurity/trivy-action@0.33.0
+      uses: aquasecurity/trivy-action@0.34.1
       with:
         image-ref: '${{ env.config_ACR_NAME }}.azurecr.io/runner_base:${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}'
         format: 'sarif'
