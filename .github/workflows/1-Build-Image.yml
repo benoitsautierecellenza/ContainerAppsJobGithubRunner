@@ -68,7 +68,7 @@ jobs:
         enable-AzPSSession: true 
 
     - name: Create GitHub App Token
-      uses: actions/create-github-app-token@v2
+      uses: actions/create-github-app-token@v1
       id: app-token
       with:
         app-id:  ${{ secrets[env.GITHUB_APP_ID] }}
