@@ -145,7 +145,7 @@ module registryCacheRule 'br/public:avm/res/container-registry/registry/cache-ru
   params: {
     registryName: registry.outputs.name
     sourceRepository: 'ghcr.io/actions/actions-runner'
-    targetRepository: 'actions-runner'
+    targetRepository: 'cache/actions-runner'
   }
 }
 
