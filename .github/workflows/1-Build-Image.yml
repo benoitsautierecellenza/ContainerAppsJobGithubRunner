@@ -53,7 +53,7 @@ jobs:
 
     - name: 'Az CLI login OpenIDConnect'
       if: ${{contains(github.ref, 'main')}}
-      uses: azure/login@v2
+      uses: Azure/login@v3.0.0
       with:
         client-id: ${{ secrets[env.SPN_CLIENT_ID_NAME] }}
         tenant-id: ${{ secrets[env.AZUREAD_TENANT_ID] }}
@@ -62,13 +62,13 @@ jobs:
 
     - name: 'Azure login SPN'
       if: ${{ ! contains(github.ref, 'main')}}
-      uses: azure/login@v2
+      uses: Azure/login@v3.0.0
       with:
         creds: '{"clientId":"${{ secrets[env.SPN_CLIENT_ID_NAME] }}","clientSecret":"${{ secrets[env.SPN_CLIENT_SECRET] }}","subscriptionId":"${{ secrets[env.HUB_SUBSCRIPTION_ID] }}","tenantId":"${{ secrets[env.AZUREAD_TENANT_ID] }}"}'
         enable-AzPSSession: true 
 
     - name: Create GitHub App Token
-      uses: actions/create-github-app-token@v1
+      uses: actions/create-github-app-token@v3
       id: app-token
       with:
         app-id:  ${{ secrets[env.GITHUB_APP_ID] }}
@@ -90,7 +90,7 @@ jobs:
         masked: false
    
     - name: Build base GitHub Action Runner image
-      uses: Azure/CLI@v2
+      uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
          # Build image to be used for runner
@@ -98,7 +98,7 @@ jobs:
          az acr build --registry ${{ env.config_ACR_NAME }} --image ${{ env.config_ACR_NAME }}.azurecr.io/$REPOSITORY:$GITHUBACTION_RUNNER_LATEST_TAG . --build-arg 'RUNNER_VERSION=${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}' --build-arg 'REGISTRY=${{ env.config_ACR_NAME }}' --build-arg 'DOTNET_VERSION=${{ env.docker_DOTNET_VERSION }}' --build-arg 'PS_VERSION=${{ env.docker_PS_VERSION }}' --build-arg 'AZACCOUNTS_VERSION=${{ env.docker_AZACCOUNTS_VERSION }}' --build-arg 'AZKEYVAULT_VERSION=${{ env.docker_AZKEYVAULT_VERSION }}' --build-arg 'AZSTORAGE_VERSION=${{ env.docker_AZSTORAGE_VERSION }}' --build-arg 'AZAPPINSIGHT_VERSION=${{ env.docker_AZAPPINSIGHT_VERSION }}' --build-arg 'AZNETWORK_VERSION=${{ env.docker_AZNETWORK_VERSION }}' --build-arg 'AZRESOURCES_VERSION=${{ env.docker_AZRESOURCES_VERSION }}' --build-arg 'AZ_TABLE_VERSION=${{ env.docker_AZ_TABLE_VERSION }}' --build-arg 'MS_GRAPH_VERSION=${{ env.docker_MS_GRAPH_VERSION }}' --build-arg 'MS_ENTRA_VERSION=${{ env.docker_MS_ENTRA_VERSION }}' --build-arg 'TERRAFORM_VERSION=${{ env.docker_TERRAFORM_VERSION }}' --build-arg 'TERRAGRUNT_VERSION=${{ env.docker_TERRAGRUNT_VERSION }}' --build-arg 'AZURECLI_VERSION=${{ env.docker_AZURECLI_VERSION }}' --build-arg  'UBUNTU_LTS_VERSION=${{ env.docker_UBUNTU_LTS_VERSION }}' 
 
     - name: Get Image latest version
-      uses: Azure/CLI@v2
+      uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
          # Get Latest version of the GitHub Action Runner official image in ACR registry
@@ -107,7 +107,7 @@ jobs:
 
     - name: 'Az CLI login OpenIDConnect (Refresh)'
       if: ${{contains(github.ref, 'main')}}
-      uses: azure/login@v2
+      uses: Azure/login@v3.0.0
       with:
         client-id: ${{ secrets[env.SPN_CLIENT_ID_NAME] }}
         tenant-id: ${{ secrets[env.AZUREAD_TENANT_ID] }}
@@ -116,7 +116,7 @@ jobs:
       
     - name: Get GHRunner custom image latest version
       if: ${{ env.config_GHRUNNER_IMAGE_VERSION == 'Latest' }} 
-      uses: Azure/CLI@v2
+      uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
           # Get Latest version of the GitHub Action Runner custom image in ACR registry
@@ -136,7 +136,7 @@ jobs:
 
     - name : Extract ACR credentials
       id: extract_acr_credentials
-      uses: Azure/CLI@v2
+      uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
           echo "Extracting ACR credentials..."
@@ -168,7 +168,7 @@ jobs:
         path: 'GHRunner-trivy-results.sarif'
 
     - name: Summary Trivy Results
-      uses: azure/powershell@v2
+      uses: azure/powershell@v3
       id: summary-Trivy_Results
       with:
           azPSVersion: "latest"
@@ -191,7 +191,7 @@ jobs:
           list-all-pkgs: true
           github-pat: ${{ steps.app-token.outputs.token }}
 
-    - uses: Azure/CLI@v2
+    - uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
           # Logoff from Azure and clean cache
