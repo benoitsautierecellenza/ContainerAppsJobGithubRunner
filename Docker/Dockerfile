@@ -63,19 +63,16 @@ RUN sudo apt-get install -y powershell
 ARG AZACCOUNTS_VERSION
 ARG AZKEYVAULT_VERSION
 ARG AZSTORAGE_VERSION
-ARG AZAPPINSIGHT_VERSION
 ARG AZNETWORK_VERSION
 ARG AZRESOURCES_VERSION
-ARG AZ_TABLE_VERSION
 ARG MS_GRAPH_VERSION
 ARG MS_ENTRA_VERSION
+ARG AZOPERATIONALINSIGHTS_VERSION
 RUN sudo pwsh -c "Install-Module -Name Az.Accounts -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZACCOUNTS_VERSION}"
 RUN sudo pwsh -c "Install-Module -Name Az.KeyVault -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZKEYVAULT_VERSION}"
 RUN sudo pwsh -c "Install-Module -Name Az.Storage -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZSTORAGE_VERSION}"
-RUN sudo pwsh -c "Install-Module -Name Az.ApplicationInsights -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZAPPINSIGHT_VERSION}"
 RUN sudo pwsh -c "Install-Module -Name Az.Network -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZNETWORK_VERSION}"
 RUN sudo pwsh -c "Install-Module -Name Az.Resources -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZRESOURCES_VERSION}"
-RUN sudo pwsh -c "Install-Module -Name AzTable -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZ_TABLE_VERSION}"
 RUN sudo pwsh -c "Install-Module -Name Microsoft.Graph -AllowClobber -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
 RUN sudo pwsh -c "Install-Module -name Microsoft.Graph.Authentication -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
 RUN sudo pwsh -c "Install-Module -name Microsoft.Graph.Applications -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
@@ -83,6 +80,7 @@ RUN sudo pwsh -c "Install-Module -name Microsoft.Graph.Groups -Scope AllUsers -F
 RUN sudo pwsh -c "Install-Module -name Microsoft.Graph.Users -Scope AllUsers -Force -RequiredVersion ${MS_GRAPH_VERSION}"
 RUN sudo pwsh -c "Install-Module -name Microsoft.Entra -Scope AllUsers -Force -RequiredVersion ${MS_ENTRA_VERSION}"
 RUN sudo pwsh -c "Install-Module -Name KubeTidy -Repository PSGallery -Scope AllUsers -Force"
+RUN sudo pwsh -c "Install-Module -Name Az.OperationalInsights -AllowClobber -Scope AllUsers -Force -RequiredVersion ${AZOPERATIONALINSIGHTS_VERSION}"
 
 # JFROG (latest) OK
 RUN curl -fL https://getcli.jfrog.io | sh
