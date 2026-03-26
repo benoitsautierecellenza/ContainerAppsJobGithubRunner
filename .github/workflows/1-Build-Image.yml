@@ -147,7 +147,7 @@ jobs:
       id : TrivyContainerScan
       uses: aquasecurity/trivy-action@0.35.0
       with:
-        image-ref: '${{ env.config_ACR_NAME }}.azurecr.io/$REPOSITORY:${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}'
+        image-ref: '${{ env.config_ACR_NAME }}.azurecr.io/${{ env.REPOSITORY }}:${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}'
         format: 'sarif'
         output: 'GHRunner-trivy-results.sarif'
         severity: 'CRITICAL,HIGH'
