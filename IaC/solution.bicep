@@ -139,6 +139,16 @@ module registry 'br/public:avm/res/container-registry/registry:0.6.0' = {
     ]
   }
 }
+// Azure Container Registry cache rule for GitHub Actions runner images
+module registryCacheRule 'br/public:avm/res/container-registry/registry/cache-rule:0.1.0' = {
+  name: '${uniqueString(deployment().name, PARAM_LOCATION)}-acr-cacherule'
+  scope: rg
+  params: {
+    registryName: registry.outputs.name
+    sourceRepository: 'ghcr.io/actions/actions-runner'
+    targetRepository: 'actions/actions-runner'
+  }
+}
 // conditional deployment of the Azure Container Apps environment (to be developped)
 //@onlyIfNotExists()
 module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.8.1' = {
