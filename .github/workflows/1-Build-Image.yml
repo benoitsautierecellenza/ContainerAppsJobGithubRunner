@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 env:
-  REPOSITORY: runner_base
+  REPOSITORY: build/runner_base
   
 jobs:
   BuildGHRunnerImage:
