@@ -1,5 +1,8 @@
+ARG REGISTRY
 ARG RUNNER_VERSION
-FROM ghcr.io/actions/actions-runner:${RUNNER_VERSION}
+#FROM ghcr.io/actions/actions-runner:${RUNNER_VERSION}
+FROM ${REGISTRY}.azurecr.io/cache/actions-runner:${RUNNER_VERSION}
+
 
 USER root
 # install curl and jq
