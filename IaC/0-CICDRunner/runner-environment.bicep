@@ -212,9 +212,7 @@ module natGateway 'br/public:avm/res/network/nat-gateway:2.0.1' = {
     location: deployment_location
     tags: tags
     natGatewaySku: 'StandardV2'
-   // publicIpAddresses: [
-   //   publicIpAddress.outputs.id
-   // ]
+    publicIpResourceIds: [publicIpAddress.outputs.resourceId]
   }
 }
 
