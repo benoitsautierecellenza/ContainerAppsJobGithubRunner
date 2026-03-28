@@ -73,12 +73,12 @@ jobs:
         inlineScript: |
          # Install Notation CLI for OCI image signing
          # Download, extract, and install
-          curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v1.3.2/notation_1.3.2_linux_amd64.tar.gz
-          tar xvzf notation.tar.gz
+         # curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v1.3.2/notation_1.3.2_linux_amd64.tar.gz
+         # tar xvzf notation.tar.gz # tar command not found
          # Copy the Notation binary to the desired bin directory in $PATH, for example
-          cp ./notation /usr/local/bin
-          notation plugin install --url https://github.com/Azure/notation-azure-kv/releases/download/v1.2.1/notation-azure-kv_1.2.1_linux_amd64.tar.gz --sha256sum 67c5ccaaf28dd44d2b6572684d84e344a02c2258af1d65ead3910b3156d3eaf5
-          notation plugin ls
+         # cp ./notation /usr/local/bin
+         # notation plugin install --url https://github.com/Azure/notation-azure-kv/releases/download/v1.2.1/notation-azure-kv_1.2.1_linux_amd64.tar.gz --sha256sum 67c5ccaaf28dd44d2b6572684d84e344a02c2258af1d65ead3910b3156d3eaf5
+         # notation plugin ls
 
     - name: Create GitHub App Token
       uses: actions/create-github-app-token@v3
