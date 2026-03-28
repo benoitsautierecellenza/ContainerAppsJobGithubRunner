@@ -139,18 +139,6 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.3' = {
     enableTelemetry: true
   }
 }
-
-// Azure Container Registry cache rule for GitHub Actions runner images
-//module registryCacheRule 'br/public:avm/res/container-registry/registry/cache-rule:0.1.0' = {
-//  name: '${uniqueString(deployment().name, deployment_location)}-acr-cacherule'
-//  scope: rg
-//  params: {
-//    registryName: registry.outputs.name
-//    sourceRepository: 'ghcr.io/actions/actions-runner'
-//    targetRepository: 'cache/actions-runner'
-//    enableTelemetry: true
-//  }
-//}
 // Virtual Network to be used by Container Apps environment
 // source : https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/network/virtual-network
 module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {

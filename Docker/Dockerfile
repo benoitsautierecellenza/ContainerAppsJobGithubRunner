@@ -117,3 +117,11 @@ RUN sudo az aks install-cli
 
 # Azure Communication Services OK
 RUN sudo az extension add --name communication --system
+
+# CVE-2026-27142
+# Install/Update Go to latest release OK
+RUN curl -sL https://go.dev/dl/ | grep -oP 'go\d+\.\d+\.\d+' | head -1 | xargs -I {} curl -sL https://go.dev/dl/{}.linux-amd64.tar.gz -o /tmp/go.tar.gz && \
+    sudo tar -C /usr/local -xzf /tmp/go.tar.gz && \
+    rm /tmp/go.tar.gz
+RUN echo "export PATH=$PATH:/usr/local/go/bin" | sudo tee -a /etc/profile
+RUN /usr/local/go/bin/go version

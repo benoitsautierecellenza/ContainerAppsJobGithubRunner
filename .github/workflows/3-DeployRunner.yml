@@ -53,7 +53,7 @@ jobs:
 
     - name: 'Az CLI login OpenIDConnect'
       if: ${{contains(github.ref, 'main')}}
-      uses: azure/login@v2
+      uses: Azure/login@v3.0.0
       with:
         client-id: ${{ secrets[env.SPN_CLIENT_ID_NAME] }}
         tenant-id: ${{ secrets[env.AZUREAD_TENANT_ID] }}
@@ -62,14 +62,14 @@ jobs:
 
     - name: 'Azure login SPN'
       if: ${{ ! contains(github.ref, 'main')}}
-      uses: azure/login@v2
+      uses: Azure/login@v3.0.0
       with:
         creds: '{"clientId":"${{ secrets[env.SPN_CLIENT_ID_NAME] }}","clientSecret":"${{ secrets[env.SPN_CLIENT_SECRET] }}","subscriptionId":"${{ secrets[env.HUB_SUBSCRIPTION_ID] }}","tenantId":"${{ secrets[env.AZUREAD_TENANT_ID] }}"}'
         enable-AzPSSession: true 
 
     - name: 'Update KeyVault Secrets for GitHub Runner App authentication'
       id: UpdateKeyVaultSecrets
-      uses: Azure/CLI@v2
+      uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
           # Update Key Vault secrets for GitHub Runner App authentication
@@ -78,7 +78,7 @@ jobs:
     - name: Get GHRunner custom image latest version (Latest)
       id: GetLatestVersion
       if: ${{ env.config_GHRUNNER_IMAGE_VERSION == 'Latest' }} 
-      uses: Azure/CLI@v2
+      uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
           # Get Latest version of the GitHub Action Runner custom image in ACR registry
@@ -87,7 +87,7 @@ jobs:
     - name: Get GHRunner custom image fixed version
       id: GetFixedVersion
       if: ${{ env.config_GHRUNNER_IMAGE_VERSION != 'Latest' }} 
-      uses: Azure/CLI@v2
+      uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
           # Get Latest version of the GitHub Action Runner custom image in ACR registry
@@ -96,7 +96,7 @@ jobs:
     - name: Get GHRunner custom image selected version (To be tested)
       id: CheckSelected
       if: ${{ env.config_GHRUNNER_IMAGE_VERSION != 'Latest' }} 
-      uses: Azure/CLI@v2
+      uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
           # Get version of the GitHub Action Runner as provided in the environment JSON file
@@ -114,14 +114,14 @@ jobs:
       id: DeployContainerJob
       env:
         RG_NAME: 'rg-Runner-${{ env.config_ENVIRONMENT }}-${{ env.config_LOCATION }}'
-      uses: Azure/CLI@v2
+      uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
           # Perform Bicep deployment at resource group level
           cd IaC/0-CICDRunner
           az deployment group create --resource-group $RG_NAME --template-file GitHubRunner-job.bicep --parameters location=${{ env.config_LOCATION }} Environment=${{ env.config_ENVIRONMENT }} Acr_Name=${{ env.config_ACR_NAME }} KeyVault_Name=${{ env.config_KEYVAULT_NAME }} Runner_Image_Tag=${{ env.IMAGE_LATEST_VERSION }} GitHub_Repo_Owner=${{ env.config_GITHUB_REPO_OWNER }} GitHub_Repo_Name=${{ env.config_GITHUB_REPO_NAME }} GitHub_App_ID=${{ secrets[env.GHRUNNER_APP_ID] }} GitHub_App_Installation_ID=${{ secrets[env.GHRUNNER_APP_INSTALLATION_ID] }} Version=${{ env.config_VERSION }}
 
-    - uses: Azure/CLI@v2
+    - uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
           # Logoff from Azure and clean cache
