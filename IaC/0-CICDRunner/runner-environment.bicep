@@ -189,6 +189,7 @@ module publicIpAddress 'br/public:avm/res/network/public-ip-address:0.12.0' = {
     name: 'pipnatgw-${Environment}-${deployment_location}'
     location: deployment_location
     tags: tags
+    skuName: 'StandardV2'
     diagnosticSettings: [
       {
         name: 'pip-diagnostics'
