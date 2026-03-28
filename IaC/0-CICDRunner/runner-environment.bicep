@@ -25,19 +25,15 @@ param Version string
 // variables
 var ResourceGroup_Name = 'rg-Runner-${Environment}-${deployment_location}'
 var User_Assigned_Identity_Name = 'uami-Runner-${Environment}-${deployment_location}'
-//var ContainerRegistry_Name = toLower('acr${Environment}${guid_pattern}')
 var LogAnalytics_Workspace_Name = toLower('law-Runner-${Environment}-${deployment_location}')
 var ApplicationInsights_Name = 'appi-Runner-${Environment}-${deployment_location}'
 var ContainerAppsEnvironment_Name = '${Environment}-${deployment_location}-acaenv'
 var ContainerAppsEnvironment_RG_Name = 'rg-acaenv-${Environment}-${deployment_location}'
 var VirtualNetwork_Name = 'vnet-Runner-${Environment}-${deployment_location}'
 var ACA_DedicatedSubnet = 'subnet-aca'
-// var param_guid  = 'ab2cae52-3be6-4eca-87bf-3f71eb825aef'
-// var guid_pattern  = replace(substring(param_guid, 0, 12), '-', '')
 var uami_keyvault_secrets_user_guid = 'd86a3f1e-2d4f-4f12-8a6a-6f2b1e5e3c3b'
 var uami_keyvault_secrets_officer_guid = 'fb382eab-e894-4461-af04-94435c366c3f'
 var uami_keyvault_access_policies_guid = 'fb382eab-e894-4461-af04-94435c366c3e'
-// var KeyVault_Name = toLower('kv0-${Environment}-${guid_pattern}')
 var tags = {
   Project: 'GitHub Runners on Container Apps'
   Environment: Environment
@@ -109,9 +105,14 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.3' = {
     location: deployment_location
     tags: tags
     cacheRules: [
+      //      {
+      //        name: 'actions-runner'
+      //        sourceRepository: 'ghcr.io/actions/actions-runner'
+      //      }
       {
         name: 'actions-runner'
         sourceRepository: 'ghcr.io/actions/actions-runner'
+        targetRepository: 'cache/actions-runner'
       }
     ]
     diagnosticSettings: [
@@ -135,20 +136,21 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.3' = {
         roleDefinitionIdOrName: 'AcrPush'
       }
     ]
+    enableTelemetry: true
   }
 }
 
 // Azure Container Registry cache rule for GitHub Actions runner images
-module registryCacheRule 'br/public:avm/res/container-registry/registry/cache-rule:0.1.0' = {
-  name: '${uniqueString(deployment().name, deployment_location)}-acr-cacherule'
-  scope: rg
-  params: {
-    registryName: registry.outputs.name
-    sourceRepository: 'ghcr.io/actions/actions-runner'
-    targetRepository: 'cache/actions-runner'
-  }
-}
-
+//module registryCacheRule 'br/public:avm/res/container-registry/registry/cache-rule:0.1.0' = {
+//  name: '${uniqueString(deployment().name, deployment_location)}-acr-cacherule'
+//  scope: rg
+//  params: {
+//    registryName: registry.outputs.name
+//    sourceRepository: 'ghcr.io/actions/actions-runner'
+//    targetRepository: 'cache/actions-runner'
+//    enableTelemetry: true
+//  }
+//}
 // Virtual Network to be used by Container Apps environment
 // source : https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/network/virtual-network
 module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
@@ -203,6 +205,7 @@ module publicIpAddress 'br/public:avm/res/network/public-ip-address:0.12.0' = {
         ]
       }
     ]
+    enableTelemetry: true
   }
 }
 // NAT Gateway for outbound connectivity for Container Apps environment
@@ -217,6 +220,7 @@ module natGateway 'br/public:avm/res/network/nat-gateway:2.0.1' = {
     tags: tags
     natGatewaySku: 'StandardV2'
     publicIpResourceIds: [publicIpAddress.outputs.resourceId]
+    enableTelemetry: true
   }
 }
 
@@ -254,6 +258,7 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
         description: 'Allows the deployer to manage Key Vault access policies'
       }
     ]
+    enableTelemetry: true
   }
 }
 // Azure Container Apps Managed Environment to host the GitHub Runners
@@ -303,34 +308,3 @@ module ACAmanagedEnv 'br/public:avm/res/app/managed-environment:0.11.3' = {
     enableTelemetry: true
   }
 }
-// diagnostics settings for Azure Container Apps Managed Environment
-// Issue to be fixed on scope
-// resource acaEnvDiagnostics 'Microsoft.Insights/diagnosticSettings@2021-05-01-preview' = {
-//  scope: ACAmanagedEnv
-//  name: '${uniqueString(deployment().name, deployment_location)}-acaenv-diagnostics'
-//  properties: {
-//    eventHubAuthorizationRuleId: 'string'
-//    eventHubName: 'string'
-//    logs: [
-//      {
-//        category: 'ContainerAppConsoleLogs'
-//        enabled: true
-//      }
-//      {
-//        category: 'ContainerAppSystemLogs'
-//        enabled: true
-//      }
-//      {
-//        category: 'AppEnvSessionConsoleLogs'
-//        enabled: true
-//      }
-//    ]
-//    metrics: [
-//      {
-//        category: 'AllMetrics'
-//        enabled: true
-//      }
-//    ]
-//    workspaceId: workspace.outputs.logAnalyticsWorkspaceId
-//  }
-//}
