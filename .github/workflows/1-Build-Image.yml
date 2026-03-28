@@ -67,6 +67,19 @@ jobs:
         creds: '{"clientId":"${{ secrets[env.SPN_CLIENT_ID_NAME] }}","clientSecret":"${{ secrets[env.SPN_CLIENT_SECRET] }}","subscriptionId":"${{ secrets[env.HUB_SUBSCRIPTION_ID] }}","tenantId":"${{ secrets[env.AZUREAD_TENANT_ID] }}"}'
         enable-AzPSSession: true 
 
+    - name: Install Notation CLI
+      uses: Azure/cli@v3.0.0
+      with:
+        inlineScript: |
+         # Install Notation CLI for OCI image signing
+         # Download, extract, and install
+          curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v1.3.2/notation_1.3.2_linux_amd64.tar.gz
+          tar xvzf notation.tar.gz
+         # Copy the Notation binary to the desired bin directory in $PATH, for example
+          cp ./notation /usr/local/bin
+          notation plugin install --url https://github.com/Azure/notation-azure-kv/releases/download/v1.2.1/notation-azure-kv_1.2.1_linux_amd64.tar.gz --sha256sum 67c5ccaaf28dd44d2b6572684d84e344a02c2258af1d65ead3910b3156d3eaf5
+          notation plugin ls
+
     - name: Create GitHub App Token
       uses: actions/create-github-app-token@v3
       id: app-token
@@ -76,12 +89,18 @@ jobs:
         owner: ${{ github.repository_owner }}
         repositories: ${{ github.event.repository.name }}
 
-    - name: Get latest Github Action Runnner version
+    - name: Get components latest versions
       run: |
+        # Github Action Runner latest release tag
         GITHUBACTION_RUNNER_LATEST_TAG=$(git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/actions/runner/ '*.*.*' | tail --lines=1 | cut --delimiter='/' --fields=3)
         GITHUBACTION_RUNNER_LATEST_TAG=$(echo "$GITHUBACTION_RUNNER_LATEST_TAG" | tr -d 'v') 
         echo "GITHUBACTION_RUNNER_LATEST_TAG=$GITHUBACTION_RUNNER_LATEST_TAG" >> $GITHUB_ENV
-  
+        # Powershell latest release tag
+        PWSH_LATEST_TAG=$(git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/powershell/powershell/ '*.*.*' | tail --lines=1 | cut --delimiter='/' --fields=3)
+        PWSH_LATEST_TAG=$(echo "$PWSH_LATEST_TAG" | tr -d 'v') 
+        echo "PWSH_LATEST_TAG=$PWSH_LATEST_TAG" >> $GITHUB_ENV
+
+
     - name: Load GitHub Runner Container image applications versions
       uses: rgarcia-phi/json-to-variables@v1.1.0
       with:
@@ -95,7 +114,8 @@ jobs:
         inlineScript: |
          # Build image to be used for runner
          cd Docker
-         az acr build --registry ${{ env.config_ACR_NAME }} --image ${{ env.config_ACR_NAME }}.azurecr.io/$REPOSITORY:$GITHUBACTION_RUNNER_LATEST_TAG . --build-arg 'RUNNER_VERSION=${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}' --build-arg 'REGISTRY=${{ env.config_ACR_NAME }}' --build-arg 'DOTNET_VERSION=${{ env.docker_DOTNET_VERSION }}' --build-arg 'PS_VERSION=${{ env.docker_PS_VERSION }}' --build-arg 'AZACCOUNTS_VERSION=${{ env.docker_AZACCOUNTS_VERSION }}' --build-arg 'AZKEYVAULT_VERSION=${{ env.docker_AZKEYVAULT_VERSION }}' --build-arg 'AZSTORAGE_VERSION=${{ env.docker_AZSTORAGE_VERSION }}' --build-arg 'AZOPERATIONALINSIGHTS_VERSION=${{ env.docker_AZOPERATIONALINSIGHTS_VERSION }}' --build-arg 'AZNETWORK_VERSION=${{ env.docker_AZNETWORK_VERSION }}' --build-arg 'AZRESOURCES_VERSION=${{ env.docker_AZRESOURCES_VERSION }}' --build-arg 'MS_GRAPH_VERSION=${{ env.docker_MS_GRAPH_VERSION }}' --build-arg 'MS_ENTRA_VERSION=${{ env.docker_MS_ENTRA_VERSION }}' --build-arg 'TERRAFORM_VERSION=${{ env.docker_TERRAFORM_VERSION }}' --build-arg 'TERRAGRUNT_VERSION=${{ env.docker_TERRAGRUNT_VERSION }}' --build-arg 'AZURECLI_VERSION=${{ env.docker_AZURECLI_VERSION }}' --build-arg  'UBUNTU_LTS_VERSION=${{ env.docker_UBUNTU_LTS_VERSION }}' --build-arg  'REGISTRY=${{ env.config_ACR_NAME }}'
+         # az acr build --registry ${{ env.config_ACR_NAME }} --image ${{ env.config_ACR_NAME }}.azurecr.io/$REPOSITORY:$GITHUBACTION_RUNNER_LATEST_TAG . --build-arg 'RUNNER_VERSION=${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}' --build-arg 'REGISTRY=${{ env.config_ACR_NAME }}' --build-arg 'DOTNET_VERSION=${{ env.docker_DOTNET_VERSION }}' --build-arg 'PS_VERSION=${{ env.docker_PS_VERSION }}' --build-arg 'AZACCOUNTS_VERSION=${{ env.docker_AZACCOUNTS_VERSION }}' --build-arg 'AZKEYVAULT_VERSION=${{ env.docker_AZKEYVAULT_VERSION }}' --build-arg 'AZSTORAGE_VERSION=${{ env.docker_AZSTORAGE_VERSION }}' --build-arg 'AZOPERATIONALINSIGHTS_VERSION=${{ env.docker_AZOPERATIONALINSIGHTS_VERSION }}' --build-arg 'AZNETWORK_VERSION=${{ env.docker_AZNETWORK_VERSION }}' --build-arg 'AZRESOURCES_VERSION=${{ env.docker_AZRESOURCES_VERSION }}' --build-arg 'MS_GRAPH_VERSION=${{ env.docker_MS_GRAPH_VERSION }}' --build-arg 'MS_ENTRA_VERSION=${{ env.docker_MS_ENTRA_VERSION }}' --build-arg 'TERRAFORM_VERSION=${{ env.docker_TERRAFORM_VERSION }}' --build-arg 'TERRAGRUNT_VERSION=${{ env.docker_TERRAGRUNT_VERSION }}' --build-arg 'AZURECLI_VERSION=${{ env.docker_AZURECLI_VERSION }}' --build-arg  'UBUNTU_LTS_VERSION=${{ env.docker_UBUNTU_LTS_VERSION }}' --build-arg  'REGISTRY=${{ env.config_ACR_NAME }}'
+         az acr build --registry ${{ env.config_ACR_NAME }} --image ${{ env.config_ACR_NAME }}.azurecr.io/$REPOSITORY:$GITHUBACTION_RUNNER_LATEST_TAG . --build-arg 'RUNNER_VERSION=${{ env.GITHUBACTION_RUNNER_LATEST_TAG }}' --build-arg 'REGISTRY=${{ env.config_ACR_NAME }}' --build-arg 'DOTNET_VERSION=${{ env.docker_DOTNET_VERSION }}' --build-arg 'PS_VERSION=$PWSH_LATEST_TAG  --build-arg 'AZACCOUNTS_VERSION=${{ env.docker_AZACCOUNTS_VERSION }}' --build-arg 'AZKEYVAULT_VERSION=${{ env.docker_AZKEYVAULT_VERSION }}' --build-arg 'AZSTORAGE_VERSION=${{ env.docker_AZSTORAGE_VERSION }}' --build-arg 'AZOPERATIONALINSIGHTS_VERSION=${{ env.docker_AZOPERATIONALINSIGHTS_VERSION }}' --build-arg 'AZNETWORK_VERSION=${{ env.docker_AZNETWORK_VERSION }}' --build-arg 'AZRESOURCES_VERSION=${{ env.docker_AZRESOURCES_VERSION }}' --build-arg 'MS_GRAPH_VERSION=${{ env.docker_MS_GRAPH_VERSION }}' --build-arg 'MS_ENTRA_VERSION=${{ env.docker_MS_ENTRA_VERSION }}' --build-arg 'TERRAFORM_VERSION=${{ env.docker_TERRAFORM_VERSION }}' --build-arg 'TERRAGRUNT_VERSION=${{ env.docker_TERRAGRUNT_VERSION }}' --build-arg 'AZURECLI_VERSION=${{ env.docker_AZURECLI_VERSION }}' --build-arg  'UBUNTU_LTS_VERSION=${{ env.docker_UBUNTU_LTS_VERSION }}' --build-arg  'REGISTRY=${{ env.config_ACR_NAME }}'
 
     - name: Get Image latest version
       uses: Azure/cli@v3.0.0
