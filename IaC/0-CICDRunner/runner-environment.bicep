@@ -181,16 +181,40 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
     enableTelemetry: true
   }
 }
+// Public IP for NAT Gateway
+module publicIpAddress 'br/public:avm/res/network/public-ip-address:0.12.0' = {
+  name: '${uniqueString(deployment().name, deployment_location)}-pip'
+  scope: rg
+  params: {
+    name: 'pipnatgw-${Environment}-${deployment_location}'
+    location: deployment_location
+    tags: tags
+    diagnosticSettings: [
+      {
+        name: 'pip-diagnostics'
+        workspaceResourceId: workspace.outputs.resourceId
+        metricCategories: [
+          {
+            category: 'AllMetrics'
+          }
+        ]
+      }
+    ]
+  }
+}
 // NAT Gateway for outbound connectivity for Container Apps environment
 module natGateway 'br/public:avm/res/network/nat-gateway:2.0.1' = {
   name: '${uniqueString(deployment().name, deployment_location)}-natgw'
   scope: rg
   params: {
-    name : 'natgw-${Environment}-${deployment_location}'
+    name: 'natgw-${Environment}-${deployment_location}'
     availabilityZone: 1
     location: deployment_location
     tags: tags
     natGatewaySku: 'StandardV2'
+   // publicIpAddresses: [
+   //   publicIpAddress.outputs.id
+   // ]
   }
 }
 
