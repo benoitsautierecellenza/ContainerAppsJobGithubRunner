@@ -149,7 +149,6 @@ module registryCacheRule 'br/public:avm/res/container-registry/registry/cache-ru
   }
 }
 
-
 // Virtual Network to be used by Container Apps environment
 // source : https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/network/virtual-network
 module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
@@ -164,6 +163,7 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
         addressPrefix: ACA_DedicatedSubnet_Prefix
         name: ACA_DedicatedSubnet
         delegation: 'Microsoft.App/environments'
+        //        defaultOutboundAccess: false
       }
     ]
     tags: tags
@@ -181,6 +181,19 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
     enableTelemetry: true
   }
 }
+// NAT Gateway for outbound connectivity for Container Apps environment
+module natGateway 'br/public:avm/res/network/nat-gateway:2.0.1' = {
+  name: '${uniqueString(deployment().name, deployment_location)}-natgw'
+  scope: rg
+  params: {
+    name : 'natgw-${Environment}-${deployment_location}'
+    availabilityZone: 1
+    location: deployment_location
+    tags: tags
+    natGatewaySku: 'StandardV2'
+  }
+}
+
 // Key Vault to be used by the solution to store secrets
 // https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/key-vault/vault
 module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
