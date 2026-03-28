@@ -51,7 +51,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   location: deployment_location
   tags: tags
 }
-// User assigned identity to be used to pull image & cess secrets in Key Vault
+// User assigned identity to be used to pull image & access secrets in Key Vault
 // https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/managed-identity/user-assigned-identity
 module userAssignedIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.4.0' = {
   name: '${uniqueString(deployment().name, deployment_location)}-aca-uami'
@@ -164,7 +164,7 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
         name: ACA_DedicatedSubnet
         delegation: 'Microsoft.App/environments'
         natGatewayResourceId: natGateway.outputs.resourceId
-        //        defaultOutboundAccess: false
+        defaultOutboundAccess: false
       }
     ]
     tags: tags
@@ -206,6 +206,7 @@ module publicIpAddress 'br/public:avm/res/network/public-ip-address:0.12.0' = {
   }
 }
 // NAT Gateway for outbound connectivity for Container Apps environment
+// source : https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/network/nat-gateway
 module natGateway 'br/public:avm/res/network/nat-gateway:2.0.1' = {
   name: '${uniqueString(deployment().name, deployment_location)}-natgw'
   scope: rg
