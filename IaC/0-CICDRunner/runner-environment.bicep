@@ -163,6 +163,7 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
         addressPrefix: ACA_DedicatedSubnet_Prefix
         name: ACA_DedicatedSubnet
         delegation: 'Microsoft.App/environments'
+        natGatewayResourceId: natGateway.outputs.resourceId
         //        defaultOutboundAccess: false
       }
     ]
@@ -181,7 +182,8 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.1' = {
     enableTelemetry: true
   }
 }
-// Public IP for NAT Gateway
+// Public IP for NAT Gateway (SKU standard V2 for resiliency and zone redundancy)
+// source : https://github.com/Azure/bicep-registry-modules/tree/main/avm/res/network/public-ip-address
 module publicIpAddress 'br/public:avm/res/network/public-ip-address:0.12.0' = {
   name: '${uniqueString(deployment().name, deployment_location)}-pip'
   scope: rg
