@@ -258,7 +258,7 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
       {
         name : sre_group_keyvault_role02_guid  // enforce stable GUID for role assignment idempotency
         principalId: SRE_Group_Object_ID
-        roleDefinitionIdOrName: 'Key Vault Certificates User'
+        roleDefinitionIdOrName: 'Key Vault Certificate User'
         description: 'Allows the SRE group to read certificates from the Key Vault'
       }
       {
