@@ -38,6 +38,10 @@ var ACA_DedicatedSubnet = 'subnet-aca'
 var uami_keyvault_secrets_user_guid = 'd86a3f1e-2d4f-4f12-8a6a-6f2b1e5e3c3b'
 var uami_keyvault_secrets_officer_guid = 'fb382eab-e894-4461-af04-94435c366c3f'
 var uami_keyvault_access_policies_guid = 'fb382eab-e894-4461-af04-94435c366c3e'
+var sre_group_keyvault_role01_guid='4d46fc91-e001-4ba5-a71b-080124190e14'
+var sre_group_keyvault_role02_guid='09d031d8-f155-48c2-8b8e-5994cf0e89a7'
+var sre_group_keyvault_role03_guid='ed6e82a9-e8b8-488c-9744-8da83d67923c'
+
 var tags = {
   Project: 'GitHub Runners on Container Apps'
   Environment: Environment
@@ -134,18 +138,6 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.3' = {
       {
         principalId: deployer().objectId
         roleDefinitionIdOrName: 'AcrPush'
-      }
-      {
-        principalId: SRE_Group_Object_ID
-        roleDefinitionIdOrName: 'Key Vault Certificates Officer'
-      }
-      {
-        principalId: SRE_Group_Object_ID
-        roleDefinitionIdOrName: 'Key Vault Certificates User'
-      }
-      {
-        principalId: SRE_Group_Object_ID
-        roleDefinitionIdOrName: 'Key Vault Crypto User'
       }
     ]
     enableTelemetry: true
@@ -257,6 +249,26 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
         roleDefinitionIdOrName: '/providers/Microsoft.Authorization/roleDefinitions/fb382eab-e894-4461-af04-94435c366c3f'
         description: 'Allows the deployer to manage Key Vault access policies'
       }
+      {
+        name : sre_group_keyvault_role01_guid  // enforce stable GUID for role assignment idempotency
+        principalId: SRE_Group_Object_ID
+        roleDefinitionIdOrName: 'Key Vault Certificates Officer'
+        description: 'Allows the SRE group to manage certificates in the Key Vault'
+      }
+      {
+        name : sre_group_keyvault_role02_guid  // enforce stable GUID for role assignment idempotency
+        principalId: SRE_Group_Object_ID
+        roleDefinitionIdOrName: 'Key Vault Certificates User'
+        description: 'Allows the SRE group to read certificates from the Key Vault'
+      }
+      {
+        name : sre_group_keyvault_role03_guid  // enforce stable GUID for role assignment idempotency
+        principalId: SRE_Group_Object_ID
+        roleDefinitionIdOrName: 'Key Vault Crypto User'
+        description: 'Allows the SRE group to perform cryptographic operations in the Key Vault'
+      }
+
+
     ]
     enableTelemetry: true
   }
