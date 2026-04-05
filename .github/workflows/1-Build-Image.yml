@@ -50,6 +50,7 @@ jobs:
           echo "GITHUB_APP_ID=${{ github.event.inputs.Environment }}_GH_APP_ID" >> $GITHUB_ENV
           echo "GITHUB_APP_INSTALLATION_ID=${{ github.event.inputs.Environment }}_GH_APP_INSTALLATION_ID" >> $GITHUB_ENV
           echo "GITHUB_APP_PEM=${{ github.event.inputs.Environment }}_GH_APP_PEM" >> $GITHUB_ENV
+          echo "SRE_GROUP_ID=${{ github.event.inputs.Environment }}_SRE_GROUP_ID" >> $GITHUB_ENV
 
     - name: 'Az CLI login OpenIDConnect'
       if: ${{contains(github.ref, 'main')}}
@@ -107,7 +108,7 @@ jobs:
         # Set environment variables for Notation plugin configuration
         echo "NOTATION_RESOURCE_GROUP=rg-Runner-${{ env.config_ENVIRONMENT }}-${{ env.config_LOCATION }}" >> $GITHUB_ENV
         echo "NOTATION_KEYVAULT=${{ env.config_KEYVAULT_NAME }}" >> $GITHUB_ENV
-        echo "NOTATION_LOCATION=${{ env.config_KEYVAULT_NAME }}" >> $GITHUB_ENV
+        echo "NOTATION_LOCATION=${{ env.config_LOCATION }}" >> $GITHUB_ENV
         echo "NOTATION_CERT_NAME=notationCert" >> $GITHUB_ENV
         echo "ACR_SUB_ID=${{ secrets[env.HUB_SUBSCRIPTION_ID] }}" >> $GITHUB_ENV
         echo "ACR_RESOURCE_GROUP=rg-Runner-${{ env.config_ENVIRONMENT }}-${{ env.config_LOCATION }}" >> $GITHUB_ENV 

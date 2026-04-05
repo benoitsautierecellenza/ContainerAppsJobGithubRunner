@@ -45,6 +45,12 @@ Run the [Create_AzureADApplication.ps1](./Scripts/Create_AzureADApplication.ps1)
 . .\Create_AzureADApplication.ps1 -Environment DEV -githubOrgName benoitsautierecellenza -SubscriptionID 5be15500-7328-4beb-871a-1498cd4b4536
 ```
 
+## Create a dedicated Azure AD group
+
+This Azure AD Entra Security group is designed to represent the SRE team manging the GitHub Action runner. Your account must be member of this group in order to perform actions such as:
+
+- Create Self-Signed certificate / Upload certificate in solution Key Vault
+
 ## Populate GitHub Action secrets
 
 Using outputs from the [Create_AzureADApplication.ps1](./Scripts/Create_AzureADApplication.ps1) script, populate required GitHub Action secrets related to the <Environment> :
@@ -53,6 +59,7 @@ Using outputs from the [Create_AzureADApplication.ps1](./Scripts/Create_AzureADA
 - `<Environment>_SUBSCRIPTION_ID` : Azure Subscription ID
 - `<Environment>_SPN_APPLICATION_CLIENT_ID` : Service Principal Client ID provided by [Create_AzureADApplication.ps1](./Scripts/Create_AzureADApplication.ps1) script
 - `<Environment>_SPN_APPLICATION_SECRET` : Service Principal Client secret provided by [Create_AzureADApplication.ps1](./Scripts/Create_AzureADApplication.ps1) script
+- `<Environment>_SRE_GROUP_ID` : Azure AD Entra Security Group ID of the SRE team managing the solution
 
 For a `DEV` environment, GitHub secrets would be named as documented below : 
 

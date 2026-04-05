@@ -22,6 +22,10 @@ param KeyVault_Name string
 
 @description('Project version')
 param Version string
+
+@description('SRE Group Object ID to be granted access to Key Vault')
+param SRE_Group_Object_ID string
+
 // variables
 var ResourceGroup_Name = 'rg-Runner-${Environment}-${deployment_location}'
 var User_Assigned_Identity_Name = 'uami-Runner-${Environment}-${deployment_location}'
@@ -105,10 +109,6 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.3' = {
     location: deployment_location
     tags: tags
     cacheRules: [
-      //      {
-      //        name: 'actions-runner'
-      //        sourceRepository: 'ghcr.io/actions/actions-runner'
-      //      }
       {
         name: 'actions-runner'
         sourceRepository: 'ghcr.io/actions/actions-runner'
@@ -134,6 +134,18 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.3' = {
       {
         principalId: deployer().objectId
         roleDefinitionIdOrName: 'AcrPush'
+      }
+      {
+        principalId: SRE_Group_Object_ID
+        roleDefinitionIdOrName: 'Key Vault Certificates Officer'
+      }
+      {
+        principalId: SRE_Group_Object_ID
+        roleDefinitionIdOrName: 'Key Vault Certificates User'
+      }
+      {
+        principalId: SRE_Group_Object_ID
+        roleDefinitionIdOrName: 'Key Vault Crypto User'
       }
     ]
     enableTelemetry: true
