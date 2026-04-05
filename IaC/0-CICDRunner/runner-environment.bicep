@@ -267,8 +267,23 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
         roleDefinitionIdOrName: 'Key Vault Crypto User'
         description: 'Allows the SRE group to perform cryptographic operations in the Key Vault'
       }
-
-
+    ]
+    diagnosticSettings: [
+      {
+        name: 'kv-diagnostics'
+        workspaceResourceId: workspace.outputs.resourceId
+        logCategories: [
+          {
+            category: 'AuditEvent'
+            enabled: true
+          }
+        ]
+        metricCategories: [
+          {
+            category: 'AllMetrics'
+          }
+        ]
+      }
     ]
     enableTelemetry: true
   }
