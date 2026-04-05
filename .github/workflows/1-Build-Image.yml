@@ -94,17 +94,29 @@ jobs:
         prefix: docker
         masked: false
 
-    - name: Install Notation CLI tool
+    - name: Install Notation CLI tool and setup variables
       shell: bash
       run: |
-        # Download, extract, and install
+        # Download, extract, and install version 1.2.1 of Notation CLI tool
         curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v1.3.2/notation_1.3.2_linux_amd64.tar.gz
         tar xvzf notation.tar.gz
         # Copy the Notation binary to the desired bin directory in $PATH, for example
         cp ./notation /usr/local/bin
         notation plugin install --url https://github.com/Azure/notation-azure-kv/releases/download/v1.2.1/notation-azure-kv_1.2.1_linux_amd64.tar.gz --sha256sum 67c5ccaaf28dd44d2b6572684d84e344a02c2258af1d65ead3910b3156d3eaf5
         notation plugin ls
-  
+        # Set environment variables for Notation plugin configuration
+        echo "NOTATION_RESOURCE_GROUP=rg-Runner-${{ env.config_ENVIRONMENT }}-${{ env.config_LOCATION }}" >> $GITHUB_ENV
+        echo "NOTATION_KEYVAULT=${{ env.config_KEYVAULT_NAME }}" >> $GITHUB_ENV
+        echo "NOTATION_LOCATION=${{ env.config_KEYVAULT_NAME }}" >> $GITHUB_ENV
+        echo "NOTATION_CERT_NAME=notationCert" >> $GITHUB_ENV
+        echo "ACR_SUB_ID=${{ secrets[env.HUB_SUBSCRIPTION_ID] }}" >> $GITHUB_ENV
+        echo "ACR_RESOURCE_GROUP=rg-Runner-${{ env.config_ENVIRONMENT }}-${{ env.config_LOCATION }}" >> $GITHUB_ENV 
+        echo "REGISTRY=${{ env.config_ACR_NAME }}.azurecr.io" >> $GITHUB_ENV
+        echo "REPO=ContainerAppsJobGithubRunner" >> $GITHUB_ENV
+        echo "TAG=v$GITHUBACTION_RUNNER_LATEST_TAG" >> $GITHUB_ENV
+        echo "IMAGE=$REGISTRY/$REPOSITORY:$TAG" >> $GITHUB_ENV
+        echo "IMAGE_SOURCE=https://github.com/benoitsautierecellenza/AzureFirewallAsAService.git#main" >> $GITHUB_ENV
+
     - name: Build base GitHub Action Runner image
       uses: Azure/cli@v3.0.0
       with:
