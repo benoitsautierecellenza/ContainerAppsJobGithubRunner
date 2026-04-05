@@ -44,7 +44,7 @@ jobs:
           echo "AZUREAD_TENANT_ID=${{github.event.inputs.Environment }}_AZUREAD_TENANT_ID" >> $GITHUB_ENV
           echo "SUBSCRIPTION_ID=${{ github.event.inputs.Environment }}_SUBSCRIPTION_ID" >> $GITHUB_ENV
           echo "SRE_GROUP_ID_NAME=${{ github.event.inputs.Environment }}_SRE_GROUP_ID" >> $GITHUB_ENV
-          echo "SRE_GROUP_ID=${{ secrets[env.SRE_GROUP_ID_NAME] }}" >> $GITHUB_ENV
+          echo "SRE_GROUP_ID=daa137b9-42d2-4cc1-ac54-cc8ab4ca4d06" >> $GITHUB_ENV
   
     - name: 'Az CLI login OpenIDConnect'
       if: ${{contains(github.ref, 'main')}}
