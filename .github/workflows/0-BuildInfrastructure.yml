@@ -79,7 +79,8 @@ jobs:
         inlineScript: |
           #
           cd IaC/0-CICDRunner
-          az keyvault certificate create -n notationCert --vault-name ${{ env.config_KEYVAULT_NAME }} -p @my_policy.json
+          ls
+          az keyvault certificate create -n notationCert --vault-name ${{ env.config_KEYVAULT_NAME }} -p @selfsignedCertRequest.json
 
     - uses: Azure/cli@v3.0.0
       with:
