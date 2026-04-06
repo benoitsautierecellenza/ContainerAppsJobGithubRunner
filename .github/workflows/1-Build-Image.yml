@@ -106,13 +106,6 @@ jobs:
       id: setup_notation
       shell: bash
       run: |
-        # Download, extract, and install version 1.2.1 of Notation CLI tool
-        curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v1.3.2/notation_1.3.2_linux_amd64.tar.gz
-        tar xvzf notation.tar.gz
-        # Copy the Notation binary to the desired bin directory in $PATH, for example
-        cp ./notation /usr/local/bin
-        notation plugin install --url https://github.com/Azure/notation-azure-kv/releases/download/v1.2.1/notation-azure-kv_1.2.1_linux_amd64.tar.gz --sha256sum 67c5ccaaf28dd44d2b6572684d84e344a02c2258af1d65ead3910b3156d3eaf5
-        notation plugin ls
         # Set environment variables for Notation plugin configuration
         echo "NOTATION_RESOURCE_GROUP=rg-Runner-${{ env.config_ENVIRONMENT }}-${{ env.config_LOCATION }}" >> $GITHUB_ENV
         echo "NOTATION_KEYVAULT=${{ env.config_KEYVAULT_NAME }}" >> $GITHUB_ENV
@@ -139,8 +132,6 @@ jobs:
           echo "IMAGE_WITH_DIGEST=$IMAGE_WITH_DIGEST" >> $GITHUB_ENV
           echo "KEY_ID=$(az keyvault certificate show -n notationCert --vault-name ${{ env.config_KEYVAULT_NAME }} --query 'kid' -o tsv)" >> $GITHUB_ENV
 
-
-
     - name: 'Az CLI login OpenIDConnect (Refresh)'
       id: OpenIDConnectRefresh
       if: ${{contains(github.ref, 'main')}}
@@ -154,9 +145,8 @@ jobs:
     - name: Sign image with Notation
       id: SignImage
       if: env.config_SIGN_IMAGE_FEATURE == 'true'
-      uses: bash
-      with:
-        inlineScript: |
+      shell: bash
+      run: |
          # Download, extract, and install Notation CLI tool
           curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v1.3.2/notation_1.3.2_linux_amd64.tar.gz
           tar xvzf notation.tar.gz
@@ -167,7 +157,7 @@ jobs:
           # KEY_ID=$(az keyvault certificate show -n notationCert --vault-name ${{ env.config_KEYVAULT_NAME }} --query 'kid' -o tsv)
           IMAGE="${{ env.config_ACR_NAME }}.azurecr.io/$REPOSITORY:$GITHUBACTION_RUNNER_LATEST_TAG"
           echo $KEY_ID
-          echo $IMAGE
+          echo $IMA          # Missing notation installation
           notation sign --signature-format cose --id $KEY_ID --plugin azure-kv --plugin-config self_signed=true $IMAGE credential_type=azurecli 
         
     - name: Get Image latest version
