@@ -154,7 +154,13 @@ jobs:
       uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
-         # Sign image with Notation CLI tool using Azure Key Vault plugin
+         # Download, extract, and install Notation CLI tool
+          curl -Lo notation.tar.gz https://github.com/notaryproject/notation/releases/download/v1.3.2/notation_1.3.2_linux_amd64.tar.gz
+          tar xvzf notation.tar.gz
+          cp ./notation /usr/local/bin
+          notation plugin install --url https://github.com/Azure/notation-azure-kv/releases/download/v1.2.1/notation-azure-kv_1.2.1_linux_amd64.tar.gz --sha256sum 67c5ccaaf28dd44d2b6572684d84e344a02c2258af1d65ead3910b3156d3eaf5
+          notation plugin ls
+          # Sign image with Notation CLI tool using Azure Key Vault plugin
           KEY_ID=$(az keyvault certificate show -n notationCert --vault-name ${{ env.config_KEYVAULT_NAME }} --query 'kid' -o tsv)
           IMAGE="${{ env.config_ACR_NAME }}.azurecr.io/$REPOSITORY:$GITHUBACTION_RUNNER_LATEST_TAG"
           echo $KEY_ID
