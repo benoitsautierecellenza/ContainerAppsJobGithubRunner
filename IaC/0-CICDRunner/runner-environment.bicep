@@ -294,7 +294,7 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
         ]
         logCategoriesAndGroups: [
           {
-            category: 'AllLogs'
+            category: 'allLogs'
             enabled: true
           }
         ]
