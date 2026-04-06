@@ -24,6 +24,7 @@ param KeyVault_Name string
 param Version string
 
 @description('SRE Group Object ID to be granted access to Key Vault')
+@secure()
 param SRE_Group_Object_ID string
 
 // variables
@@ -38,12 +39,11 @@ var ACA_DedicatedSubnet = 'subnet-aca'
 var uami_keyvault_secrets_user_guid = 'd86a3f1e-2d4f-4f12-8a6a-6f2b1e5e3c3b'
 var uami_keyvault_secrets_officer_guid = 'fb382eab-e894-4461-af04-94435c366c3f'
 var uami_keyvault_access_policies_guid = 'fb382eab-e894-4461-af04-94435c366c3e'
-var sre_group_keyvault_role01_guid='4d46fc91-e001-4ba5-a71b-080124190e14'
-var sre_group_keyvault_role02_guid='09d031d8-f155-48c2-8b8e-5994cf0e89a7'
-var sre_group_keyvault_role03_guid='ed6e82a9-e8b8-488c-9744-8da83d67923c'
-var uami_keyvault_role01_guid = '8a49ad68-56c1-4c6b-884e-19c1247759c3' 
-var uami_keyvault_role02_guid = '4b60ea65-bb50-4695-8256-bef00777b6c9' 
-
+var sre_group_keyvault_role01_guid = '4d46fc91-e001-4ba5-a71b-080124190e14'
+var sre_group_keyvault_role02_guid = '09d031d8-f155-48c2-8b8e-5994cf0e89a7'
+var sre_group_keyvault_role03_guid = 'ed6e82a9-e8b8-488c-9744-8da83d67923c'
+var uami_keyvault_role01_guid = '8a49ad68-56c1-4c6b-884e-19c1247759c3'
+var uami_keyvault_role02_guid = '4b60ea65-bb50-4695-8256-bef00777b6c9'
 
 var tags = {
   Project: 'GitHub Runners on Container Apps'
@@ -253,32 +253,51 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
         description: 'Allows the deployer to manage Key Vault access policies'
       }
       {
-        name : sre_group_keyvault_role01_guid  // enforce stable GUID for role assignment idempotency
+        name: sre_group_keyvault_role01_guid // enforce stable GUID for role assignment idempotency
         principalId: SRE_Group_Object_ID
         roleDefinitionIdOrName: 'Key Vault Certificates Officer'
         description: 'Allows the SRE group to manage certificates in the Key Vault'
       }
       {
-        name : sre_group_keyvault_role02_guid  // enforce stable GUID for role assignment idempotency
+        name: sre_group_keyvault_role02_guid // enforce stable GUID for role assignment idempotency
         principalId: SRE_Group_Object_ID
         roleDefinitionIdOrName: 'Key Vault Certificate User'
         description: 'Allows the SRE group to read certificates from the Key Vault'
       }
       {
-        name : sre_group_keyvault_role03_guid  // enforce stable GUID for role assignment idempotency
+        name: sre_group_keyvault_role03_guid // enforce stable GUID for role assignment idempotency
         principalId: SRE_Group_Object_ID
         roleDefinitionIdOrName: 'Key Vault Crypto User'
         description: 'Allows the SRE group to perform cryptographic operations in the Key Vault'
       }
       {
-        name : uami_keyvault_role01_guid // enforce stable GUID for role assignment idempotency
+        name: uami_keyvault_role01_guid // enforce stable GUID for role assignment idempotency
         principalId: userAssignedIdentity.outputs.principalId
         roleDefinitionIdOrName: 'Key Vault Certificate User'
       }
       {
-        name : uami_keyvault_role02_guid // enforce stable GUID for role assignment idempotency
+        name: uami_keyvault_role02_guid // enforce stable GUID for role assignment idempotency
         principalId: userAssignedIdentity.outputs.principalId
         roleDefinitionIdOrName: 'Key Vault Crypto User'
+      }
+    ]
+    diagnosticSettings: [
+      {
+        name: 'kv-diagnostics'
+        workspaceResourceId: '<workspaceResourceId>'
+        logAnalyticsDestinationType: 'Dedicated'
+        metricCategories: [
+          {
+            category: 'AllMetrics'
+            enabled: true
+          }
+        ]
+        logCategoriesAndGroups: [
+          {
+            category: 'AllLogs'
+            enabled: true
+          }
+        ]
       }
     ]
     enableTelemetry: true
