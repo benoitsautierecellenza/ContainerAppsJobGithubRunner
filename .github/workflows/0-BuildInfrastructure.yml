@@ -122,7 +122,7 @@ jobs:
           Write-Output "CREATE_NEW_CERTIFICATE_FLAG=$($CreateNewCertificate_Flag)" >> $Env:GITHUB_OUTPUT
 
     - name: 'Generate Self-Signed certificate for notation'
-      if: ${{ env.config_SIGN_IMAGE_FEATURE == 'false' }} 
+      if: steps.CheckForCertificate.outputs.CREATE_NEW_CERTIFICATE_FLAG == 'true' && env.config_SIGN_IMAGE_FEATURE == 'true'
       uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
