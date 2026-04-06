@@ -284,7 +284,7 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
     diagnosticSettings: [
       {
         name: 'kv-diagnostics'
-        workspaceResourceId: '<workspaceResourceId>'
+        workspaceResourceId: workspace.outputs.resourceId
         logAnalyticsDestinationType: 'Dedicated'
         metricCategories: [
           {
