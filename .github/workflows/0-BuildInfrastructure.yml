@@ -90,12 +90,14 @@ jobs:
           $CheckForCertificate = Get-AzKeyVaultCertificate -VaultName kv0-dev-ab2cae523be | Where-Object { $_.Enabled -eq $true }
           If (($CheckForCertificate | Measure-Object).count -eq 0) {
             # No certificate found, create a self-signed certificate
+            [String]$Message = "No certificate found in KeyVault, creating a new self-signed certificate."
             $CreateNewCertificate_Flag = $true
           }
           elseif (($CheckForCertificate | Measure-Object).count -eq 1) {
             # A certificate object was found
             if ($CheckForCertificate.Name -ne $KeyVault_Certificate_Name) {
               # No certificate found, create a self-signed certificate
+              [String]$Message = "No certificate found in KeyVault, creating a new self-signed certificate."
               $CreateNewCertificate_Flag = $true
             }
           else {
@@ -103,14 +105,20 @@ jobs:
             [DateTime]$CurrentCertificate_ExpiryDate = $CurrentCertificate.Expires
             if ($CurrentCertificate_ExpiryDate -lt (Get-Date).AddDays(30)) {
               # Certificate expiring in less than 30 days, create a new self-signed certificate
+              [String]$Message = "Certificate expiring in less than 30 days, creating a new self-signed certificate."
+              # Need to delete existing certificate
+              # Need to purge existing certificate
+              # Need to wait for purge to complete
               $CreateNewCertificate_Flag = $true
             }
             else {
               # Existing certificate is valid for more than 30 days, no action needed
+              [String]$Message = "Existing certificate is valid for more than 30 days, no action needed."
               $CreateNewCertificate_Flag = $false
             }
           }
           }
+          Write-output $Message
           Write-Output "CREATE_NEW_CERTIFICATE_FLAG=$($CreateNewCertificate_Flag)" >> $Env:GITHUB_OUTPUT
 
     - name: 'Generate Self-Signed certificate for notation'
