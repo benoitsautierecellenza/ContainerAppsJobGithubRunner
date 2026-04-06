@@ -44,6 +44,10 @@ var sre_group_keyvault_role02_guid = '09d031d8-f155-48c2-8b8e-5994cf0e89a7'
 var sre_group_keyvault_role03_guid = 'ed6e82a9-e8b8-488c-9744-8da83d67923c'
 var uami_keyvault_role01_guid = '8a49ad68-56c1-4c6b-884e-19c1247759c3'
 var uami_keyvault_role02_guid = '4b60ea65-bb50-4695-8256-bef00777b6c9'
+var deployer_keyvault_role01_guid='5587620f-a023-4816-bf15-72dec7c6c1b4'
+var deployer_keyvault_role02_guid='50e2e250-e590-410e-a61b-4454eb220527'
+var deployer_keyvault_role03_guid='4edd6c2c-ecce-4e26-aeef-b75c4f6282df'
+
 
 var tags = {
   Project: 'GitHub Runners on Container Apps'
@@ -280,6 +284,23 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
         principalId: userAssignedIdentity.outputs.principalId
         roleDefinitionIdOrName: 'Key Vault Crypto User'
       }
+      {
+        name: deployer_keyvault_role01_guid
+        principalId: deployer().objectId
+        roleDefinitionIdOrName:'Key Vault Certificates Officer'
+      }
+            {
+        name: deployer_keyvault_role02_guid
+        principalId: deployer().objectId
+        roleDefinitionIdOrName:'Key Vault Certificate User'
+      }
+      {
+        name: deployer_keyvault_role03_guid
+        principalId: deployer().objectId
+        roleDefinitionIdOrName:'Key Vault Crypto User'
+      }
+
+
     ]
     diagnosticSettings: [
       {
