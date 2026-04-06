@@ -155,8 +155,8 @@ jobs:
       with:
         inlineScript: |
          # Sign image with Notation CLI tool using Azure Key Vault plugin
-          IMAGE=$($REGISTRY/${$REPOSITORY}:$GITHUBACTION_RUNNER_LATEST_TAG)
           KEY_ID=$(az keyvault certificate show -n notationCert --vault-name ${{ env.config_KEYVAULT_NAME }} --query 'kid' -o tsv)
+          IMAGE=$(${{ env.config_ACR_NAME }}.azurecr.io/$REPOSITORY:$GITHUBACTION_RUNNER_LATEST_TAG)
           echo $IMAGE
           echo $KEY_ID
           notation sign --signature-format cose --id $KEY_ID --plugin azure-kv --plugin-config self_signed=true $IMAGE credential_type=azurecli 
