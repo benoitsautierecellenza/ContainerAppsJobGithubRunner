@@ -17,26 +17,29 @@ jobs:
     runs-on: ubuntu-latest  
     steps:
     - name: Checkout
+      id: checkout
       uses: actions/checkout@v4
     
     - name: Check JSON environment file
       id: check_files
       uses: andstor/file-existence-action@v2
       with:
-          files: 'IaC/Environments/${{ github.event.inputs.Environment }}.JSON'
-          ignore_case: true
-          fail: true
+        files: 'IaC/Environments/${{ github.event.inputs.Environment }}.JSON'
+        ignore_case: true
+        fail: true
 
     - name: Load JSON environment file into Environment variables
+      id: load_env_file
       if: steps.check_files.outputs.files_exists == 'true'
       uses: rgarcia-phi/json-to-variables@v1.1.0
       with:
-        filename: 'IaC/Environments/${{ github.event.inputs.Environment }}.JSON'    
+        filename: 'IaC/Environments/${{ github.event.inputs.Environment }}.JSON'
         prefix: config
         masked: false
 
     - name: Set environment variables required to select corresponding GitHub Action secrets
-      shell: bash  
+      id: set_env_variables
+      shell: bash
       run: |
           # Set environment variables required for authentication
           echo "SPN_CLIENT_ID_NAME=${{ github.event.inputs.Environment }}_SPN_APPLICATION_CLIENT_ID" >> $GITHUB_ENV
@@ -48,6 +51,7 @@ jobs:
           #echo "SRE_GROUP_ID=${{ secrets[env.SRE_GROUP_ID] }}" >> $GITHUB_ENV
 
     - name: 'Az CLI login OpenIDConnect'
+      id: OpenIDConnect
       if: ${{contains(github.ref, 'main')}}
       uses: Azure/login@v3.0.0
       with:
@@ -57,6 +61,7 @@ jobs:
         enable-AzPSSession: true
        
     - name: 'Azure login SPN'
+      id: SPNLogin
       if: ${{ ! contains(github.ref, 'main')}}
       uses: Azure/login@v3.0.0
       with:
@@ -73,14 +78,48 @@ jobs:
           # possible to use CIDR for ACA subnet https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/bicep-functions-cidr#cidrsubnet
           az deployment sub create --name "Registry-${{ github.run_id }}" --location=${{ env.config_LOCATION }} --template-file runner-environment.bicep --parameters ContainerRegistry_Name=${{ env.config_ACR_NAME }} deployment_location=${{ env.config_LOCATION }} Environment=${{ env.config_ENVIRONMENT }} LogAnalytics_Workspace_RetentionInDays=${{ env.config_LAW_RETENTION_DAYS }} VirtualNetwork_Prefix=${{ env.config_VIRTUALNETWORK_PREFIX }} ACA_DedicatedSubnet_Prefix=${{ env.config_ACA_SUBNET_PREFIX}} Version=${{ env.config_VERSION }} KeyVault_Name=${{ env.config_KEYVAULT_NAME }} SRE_Group_Object_ID=${{ secrets[env.SRE_GROUP_ID] }}
 
-    - name : 'Generate Self-Signed certificate for notation'
-      if: ${{ env.config_SIGN_IMAGE_FEATURE == 'true' }} 
+    - name: Check for Existing certificate in KeyVault
+      id: CheckForCertificate
+      uses: azure/powershell@v2
+      with:
+        azPSVersion: "latest"
+        inlineScript: |
+          # Check for exitsing certificate in KeyVault, if not existing create a self-signed certificate to be used for GitHub Runner authentication with ACR
+          [String]$KeyVault_Certificate_Name = "notationCert"
+          [Bool]$CreateNewCertificate_Flag = $false
+          $CheckForCertificate = Get-AzKeyVaultCertificate -VaultName kv0-dev-ab2cae523be | Where-Object { $_.Enabled -eq $true }
+          If (($CheckForCertificate | Measure-Object).count -eq 0) {
+            # No certificate found, create a self-signed certificate
+            $CreateNewCertificate_Flag = $true
+          }
+          elseif (($CheckForCertificate | Measure-Object).count -eq 1) {
+            # A certificate object was found
+            if ($CheckForCertificate.Name -ne $KeyVault_Certificate_Name) {
+              # No certificate found, create a self-signed certificate
+              $CreateNewCertificate_Flag = $true
+            }
+          else {
+            $CurrentCertificate = $CheckForCertificate | Where-Object {$_.Name -eq $KeyVault_Certificate_Name}
+            [DateTime]$CurrentCertificate_ExpiryDate = $CurrentCertificate.Expires
+            if ($CurrentCertificate_ExpiryDate -lt (Get-Date).AddDays(30)) {
+              # Certificate expiring in less than 30 days, create a new self-signed certificate
+              $CreateNewCertificate_Flag = $true
+            }
+            else {
+              # Existing certificate is valid for more than 30 days, no action needed
+              $CreateNewCertificate_Flag = $false
+            }
+          }
+          }
+          Write-Output "CREATE_NEW_CERTIFICATE_FLAG=$($CreateNewCertificate_Flag)" >> $Env:GITHUB_OUTPUT
+
+    - name: 'Generate Self-Signed certificate for notation'
+      if: ${{ env.config_SIGN_IMAGE_FEATURE == 'false' }} 
       uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
-          #
+          # Generate self-signed certificate for notation and store it in KeyVault to be used for signing container images with Notation
           cd IaC/0-CICDRunner
-          ls
           az keyvault certificate create -n notationCert --vault-name ${{ env.config_KEYVAULT_NAME }} -p @selfsignedCertRequest.json
 
     - uses: Azure/cli@v3.0.0
