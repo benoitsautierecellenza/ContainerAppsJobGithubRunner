@@ -27,6 +27,9 @@ param Version string
 @secure()
 param SRE_Group_Object_ID string
 
+@description('Sign Image feature flag')
+param Sign_Image_Feature_Flag bool
+
 // variables
 var ResourceGroup_Name = 'rg-Runner-${Environment}-${deployment_location}'
 var User_Assigned_Identity_Name = 'uami-Runner-${Environment}-${deployment_location}'
@@ -114,7 +117,8 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.3' = {
   scope: rg
   params: {
     name: ContainerRegistry_Name
-    acrSku: 'Basic'
+    //  acrSku: 'Basic'
+    acrSku: Sign_Image_Feature_Flag ? 'Standard' : 'Basic' // Standard SKU is required for content trust and image signing features, but to optimize cost we can use Basic SKU when signing is not needed
     acrAdminUserEnabled: true
     publicNetworkAccess: 'Enabled'
     location: deployment_location
