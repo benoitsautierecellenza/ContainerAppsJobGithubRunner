@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest  
     steps:
     - name: Checkout
+      id: checkout
       uses: actions/checkout@v4
     
     - name: Check JSON environment file
@@ -32,6 +33,7 @@ jobs:
           fail: true
 
     - name: Load JSON environment file into Environment variables
+      id: load_env_file
       if: steps.check_files.outputs.files_exists == 'true'
       uses: rgarcia-phi/json-to-variables@v1.1.0
       with:
@@ -40,6 +42,7 @@ jobs:
         masked: false
     
     - name: Set environment variables required to select corresponding GitHub Action secrets
+      id: set_env_variables
       shell: bash  
       run: |
           # Set environment variables required for authentication
@@ -53,6 +56,7 @@ jobs:
           echo "SRE_GROUP_ID=${{ github.event.inputs.Environment }}_SRE_GROUP_ID" >> $GITHUB_ENV
 
     - name: 'Az CLI login OpenIDConnect'
+      id: OpenIDConnect
       if: ${{contains(github.ref, 'main')}}
       uses: Azure/login@v3.0.0
       with:
@@ -62,6 +66,7 @@ jobs:
         enable-AzPSSession: true
 
     - name: 'Azure login SPN'
+      id: SPNLogin
       if: ${{ ! contains(github.ref, 'main')}}
       uses: Azure/login@v3.0.0
       with:
@@ -69,8 +74,8 @@ jobs:
         enable-AzPSSession: true 
 
     - name: Create GitHub App Token
-      uses: actions/create-github-app-token@v3
       id: app-token
+      uses: actions/create-github-app-token@v3
       with:
         app-id:  ${{ secrets[env.GITHUB_APP_ID] }}
         private-key: '${{ secrets[env.GITHUB_APP_PEM] }}'
@@ -78,6 +83,7 @@ jobs:
         repositories: ${{ github.event.repository.name }}
 
     - name: Get components latest versions
+      id: get_components_latest_versions
       run: |
         # Github Action Runner latest release tag
         GITHUBACTION_RUNNER_LATEST_TAG=$(git -c 'versionsort.suffix=-' ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/actions/runner/ '*.*.*' | tail --lines=1 | cut --delimiter='/' --fields=3)
@@ -89,6 +95,7 @@ jobs:
         echo "PWSH_LATEST_TAG=$PWSH_LATEST_TAG" >> $GITHUB_ENV
 
     - name: Load GitHub Runner Container image applications versions
+      id: load_image_components_versions
       uses: rgarcia-phi/json-to-variables@v1.1.0
       with:
         filename: 'Docker/versions.json'
@@ -96,6 +103,7 @@ jobs:
         masked: false
 
     - name: Install Notation CLI tool and setup variables
+      id: setup_notation
       shell: bash
       run: |
         # Download, extract, and install version 1.2.1 of Notation CLI tool
@@ -119,6 +127,7 @@ jobs:
         echo "IMAGE_SOURCE=https://github.com/benoitsautierecellenza/AzureFirewallAsAService.git#main" >> $GITHUB_ENV
 
     - name: Build base GitHub Action Runner image
+      id: build_runner_image
       uses: Azure/cli@v3.0.0
       with:
         inlineScript: |
@@ -129,15 +138,8 @@ jobs:
           IMAGE_WITH_DIGEST="${{ env.config_ACR_NAME }}.azurecr.io/$REPOSITORY@$DIGEST"
           echo "IMAGE_WITH_DIGEST=$IMAGE_WITH_DIGEST" >> $GITHUB_ENV
 
-    - name: Get Image latest version
-      uses: Azure/cli@v3.0.0
-      with:
-        inlineScript: |
-         # Get Latest version of the GitHub Action Runner official image in ACR registry
-         echo "Latest Runner image available : $(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository $REPOSITORY --top 1 --orderby time_desc --out tsv)"
-         echo "IMAGE_LATEST_VERSION=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository $REPOSITORY --top 1 --orderby time_desc --out tsv)" >> $GITHUB_ENV
-
     - name: 'Az CLI login OpenIDConnect (Refresh)'
+      id: OpenIDConnectRefresh
       if: ${{contains(github.ref, 'main')}}
       uses: Azure/login@v3.0.0
       with:
@@ -145,8 +147,29 @@ jobs:
         tenant-id: ${{ secrets[env.AZUREAD_TENANT_ID] }}
         subscription-id: ${{ secrets[env.HUB_SUBSCRIPTION_ID] }}
         enable-AzPSSession: true
-      
+
+    - name: Sign image with Notation
+      id: SignImage
+      if: env.config_SIGN_IMAGE_FEATURE == 'true'
+      uses: Azure/cli@v3.0.0
+      with:
+        inlineScript: |
+         # Sign image with Notation CLI tool using Azure Key Vault plugin
+          IMAGE=$REGISTRY/${$REPOSITORY}:$GITHUBACTION_RUNNER_LATEST_TAGT
+          KEY_ID=$(az keyvault certificate show -n notationCert --vault-name ${{ env.config_KEYVAULT_NAME }} --query 'kid' -o tsv)
+          notation sign --signature-format cose --id $KEY_ID --plugin azure-kv --plugin-config self_signed=true $IMAGE credential_type=azurecli 
+        
+    - name: Get Image latest version
+      id: get_image_latest_version
+      uses: Azure/cli@v3.0.0
+      with:
+        inlineScript: |
+         # Get Latest version of the GitHub Action Runner official image in ACR registry
+         echo "Latest Runner image available : $(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository $REPOSITORY --top 1 --orderby time_desc --out tsv)"
+         echo "IMAGE_LATEST_VERSION=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository $REPOSITORY --top 1 --orderby time_desc --out tsv)" >> $GITHUB_ENV
+
     - name: Get GHRunner custom image latest version
+      id: get_ghrunner_custom_image_latest_version
       if: ${{ env.config_GHRUNNER_IMAGE_VERSION == 'Latest' }} 
       uses: Azure/cli@v3.0.0
       with:
