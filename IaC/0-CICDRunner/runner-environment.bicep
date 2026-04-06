@@ -292,12 +292,6 @@ module KeyVault 'br/public:avm/res/key-vault/vault:0.13.3' = {
             enabled: true
           }
         ]
-        logCategoriesAndGroups: [
-          {
-            category: 'allLogs'
-            enabled: true
-          }
-        ]
       }
     ]
     enableTelemetry: true
