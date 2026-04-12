@@ -1,8 +1,6 @@
 ARG REGISTRY
 ARG RUNNER_VERSION
-#FROM ghcr.io/actions/actions-runner:${RUNNER_VERSION}
 FROM ${REGISTRY}.azurecr.io/cache/actions-runner:${RUNNER_VERSION}
-
 
 USER root
 # install curl and jq
@@ -55,7 +53,7 @@ RUN sudo rm packages-microsoft-prod.deb
 RUN sudo apt-get update
 RUN sudo apt-get install -y dotnet-sdk-${DOTNET_VERSION}
 
-# Azure CLI (selected version) installation
+# Azure CLI (selected version) installation (OK)
 ARG AZURECLI_VERSION
 ARG UBUNTU_LTS_VERSION
 RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg >/dev/null
@@ -64,7 +62,7 @@ RUN sudo apt-get update
 #RUN sudo apt-get install azure-cli
 RUN sudo apt-get install -y azure-cli=${AZURECLI_VERSION}-1~${UBUNTU_LTS_VERSION}
 
-# Install Powershell with custom version OK
+# Install Powershell with custom version (OK)
 ARG PS_VERSION
 RUN wget https://github.com/PowerShell/PowerShell/releases/download/v${PS_VERSION}/powershell_${PS_VERSION}-1.deb_amd64.deb
 RUN sudo dpkg -i powershell_${PS_VERSION}-1.deb_amd64.deb
@@ -72,7 +70,7 @@ RUN sudo apt-get install -f
 RUN rm powershell_${PS_VERSION}-1.deb_amd64.deb
 RUN sudo apt-get install -y powershell
 
-# Install PowerShell modules (fixed versions) OK
+# Install PowerShell modules with fixed versions (OK)
 ARG AZACCOUNTS_VERSION
 ARG AZKEYVAULT_VERSION
 ARG AZSTORAGE_VERSION
