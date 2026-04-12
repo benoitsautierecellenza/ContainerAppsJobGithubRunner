@@ -77,7 +77,7 @@ jobs:
       id: app-token
       uses: actions/create-github-app-token@v3
       with:
-        app-id:  ${{ secrets[env.GITHUB_APP_ID] }}
+        client-id:  ${{ secrets[env.GITHUB_APP_ID] }}
         private-key: '${{ secrets[env.GITHUB_APP_PEM] }}'
         owner: ${{ github.repository_owner }}
         repositories: ${{ github.event.repository.name }}
