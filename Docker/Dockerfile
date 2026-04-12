@@ -37,6 +37,16 @@ RUN sudo apt-get -y install zip
 RUN sudo apt-get -y install pip
 RUN sudo apt-get update 
 
+# Install Go (golang) with custom version OK
+ARG GO_VERSION
+RUN wget -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
+    sudo rm -rf /usr/local/go && \
+    sudo tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz && \
+    rm go${GO_VERSION}.linux-amd64.tar.gz && \
+    sudo ln -s /usr/local/go/bin/go /usr/bin/go && \
+    sudo ln -s /usr/local/go/bin/gofmt /usr/bin/gofmt
+ENV PATH="${PATH}:/usr/local/go/bin"
+
 # Install .NET (selected version) SDK & Runtime (OK)
 ARG DOTNET_VERSION
 RUN wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb

@@ -11,5 +11,6 @@
     "TERRAGRUNT_VERSION": "0.96.1",
     "MS_ENTRA_VERSION": "1.2.0",
     "AZURECLI_VERSION" : "2.80.0",
-    "UBUNTU_LTS_VERSION" : "noble"
+    "UBUNTU_LTS_VERSION" : "noble",
+    "GO_VERSION" : "1.26.2"
 }
