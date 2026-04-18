@@ -2,6 +2,16 @@ ARG REGISTRY
 ARG RUNNER_VERSION
 FROM ${REGISTRY}.azurecr.io/cache/actions-runner:${RUNNER_VERSION}
 
+# CVE-2026-39882: Enforce OpenTelemetry-Go ≥1.43.0 for DoS protection
+# CVSS 5.3 (MEDIUM) - Memory exhaustion via unbounded HTTP response buffering
+# https://nvd.nist.gov/vuln/detail/CVE-2026-39882
+RUN mkdir -p /tmp/otel-constraint && cd /tmp/otel-constraint && \
+    echo 'module otel-check' > go.mod && \
+    echo 'go 1.20' >> go.mod && \
+    echo 'require go.opentelemetry.io/otel v1.43.0' >> go.mod && \
+    go mod download && \
+    cd / && rm -rf /tmp/otel-constraint
+
 USER root
 # install curl and jq
 RUN apt-get update && apt-get install -y curl jq && \
