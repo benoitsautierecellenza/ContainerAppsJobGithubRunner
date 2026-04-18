@@ -45,18 +45,6 @@ RUN wget -q https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz && \
     sudo ln -s /usr/local/go/bin/gofmt /usr/bin/gofmt
 ENV PATH="${PATH}:/usr/local/go/bin"
 
-
-# CVE-2026-39882: Enforce OpenTelemetry-Go ≥1.43.0 for DoS protection
-# CVSS 5.3 (MEDIUM) - Memory exhaustion via unbounded HTTP response buffering
-# https://nvd.nist.gov/vuln/detail/CVE-2026-39882
-RUN mkdir -p /tmp/otel-constraint && cd /tmp/otel-constraint && \
-    echo 'module otel-check' > go.mod && \
-    echo 'go 1.20' >> go.mod && \
-    echo 'require go.opentelemetry.io/otel v1.43.0' >> go.mod && \
-    go mod download && \
-    cd / && rm -rf /tmp/otel-constraint
-
-
 # Install .NET (selected version) SDK & Runtime (OK)
 ARG DOTNET_VERSION
 RUN wget https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
