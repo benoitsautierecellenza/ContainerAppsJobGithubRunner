@@ -14,7 +14,7 @@ permissions:
   contents: read
 
 env:
-  REPOSITORY: runner_base
+  REPOSITORY: build/runner_base
   
 jobs:
   DeployGHRunner:
@@ -84,7 +84,7 @@ jobs:
       with:
         inlineScript: |
           # Get Latest version of the GitHub Action Runner custom image in ACR registry
-          echo "IMAGE_LATEST_VERSION=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository runner_base --top 1 --orderby time_desc --out tsv)" >> $GITHUB_ENV
+          echo "IMAGE_LATEST_VERSION=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository $REPOSITORY --top 1 --orderby time_desc --out tsv)" >> $GITHUB_ENV
 
     - name: Get GHRunner custom image fixed version
       id: GetFixedVersion
@@ -102,13 +102,13 @@ jobs:
       with:
         inlineScript: |
           # Get version of the GitHub Action Runner as provided in the environment JSON file
-          CheckVersion=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository runner_base --output tsv)
+          CheckVersion=$(az acr repository show-tags --name ${{ env.config_ACR_NAME }} --repository $REPOSITORY --output tsv)
           if  echo "$CheckVersion" | grep -q "${{ env.config_GHRUNNER_IMAGE_VERSION }}"; then
-            echo "Image tag ${{ env.config_GHRUNNER_IMAGE_VERSION }} exists in repository runner_base of registry ${{ env.config_ACR_NAME }}."
+            echo "Image tag ${{ env.config_GHRUNNER_IMAGE_VERSION }} exists in repository $REPOSITORY of registry ${{ env.config_ACR_NAME }}."
             echo "IMAGE_LATEST_VERSION=${{ env.config_GHRUNNER_IMAGE_VERSION }}" >> $GITHUB_ENV
             echo "Image to be deployed : $IMAGE_LATEST_VERSION"
           else
-            echo "Image tag ${{ env.config_GHRUNNER_IMAGE_VERSION }} does not exists for repository runner_base of registry ${{ env.config_ACR_NAME }}."
+            echo "Image tag ${{ env.config_GHRUNNER_IMAGE_VERSION }} does not exists for repository $REPOSITORY of registry ${{ env.config_ACR_NAME }}."
             exit 1
           fi
 
